@@ -1,0 +1,24 @@
+name: AuctionHouse
+version: 3.1.1
+main: me.zerep.auctionhouse.AuctionHousePlugin
+api-version: '1.21'
+authors: [Zerep]
+description: Vanilla commodity marketplace with build shop and delivery box.
+
+commands:
+  ah:
+    description: Main AuctionHouse command
+    usage: /ah [shop|deliveries|mine|reload]
+    aliases: [auction, auctionhouse]
+    permission: ah.use
+
+permissions:
+  ah.use:
+    description: Use AuctionHouse
+    default: true
+  ah.admin:
+    description: Admin permission for reload and management
+    default: op
+  ah.bypass-limit:
+    description: Bypass listing limit
+    default: op
