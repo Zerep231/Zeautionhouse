@@ -94,11 +94,21 @@ public class AhCommand implements CommandExecutor, TabCompleter {
         player.getInventory().setItemInMainHand(null);
         player.updateInventory();
 
-        int id = plugin.getListingService().createListing(player, item, price, currency);
+        int id;
+        try {
+            id = plugin.getListingService().createListing(player, item, price, currency);
+        } catch (Exception ex) {
+            // DB or other unexpected error – always return the item
+            ListingService.give(player, item);
+            player.sendMessage(plugin.msg("sell-error"));
+            plugin.getLogger().severe("handleQuickSell createListing failed: " + ex.getMessage());
+            return;
+        }
+
         if (id > 0) {
             player.sendMessage(plugin.msg("sell-success"));
         } else {
-            // Return item – listing failed (limit reached etc.)
+            // Listing rejected (limit reached, etc.) – return item
             ListingService.give(player, item);
             player.sendMessage(plugin.msg("sell-limit"));
         }

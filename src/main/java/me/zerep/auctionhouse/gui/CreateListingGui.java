@@ -47,7 +47,7 @@ public class CreateListingGui {
         for (int i = 0; i < 27; i++) inv.setItem(i, Gfx.filler());
         inv.setItem(4, Gfx.item(Material.PAPER,
                 "&fPlace item in the &ycenter slot",
-                "&7Then click &aConfirm"));
+                "&7Then click &aNext \u2192"));
         inv.setItem(INPUT_SLOT, null);          // keep empty for player to fill
         inv.setItem(CANCEL_SLOT, Gfx.red("Cancel"));
         inv.setItem(NEXT_SLOT,   Gfx.green("Next →"));
