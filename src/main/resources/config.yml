@@ -1,0 +1,64 @@
+max-per-player: 10
+listing-expire-hours: 72
+expire-check-interval-minutes: 10
+broadcast-sales: true
+max-price: 999999
+
+currencies:
+  - DIAMOND
+  - EMERALD
+  - NETHERITE_INGOT
+  - GOLD_INGOT
+  - IRON_INGOT
+
+currency-display:
+  DIAMOND: "&bDiamond"
+  EMERALD: "&2Emerald"
+  NETHERITE_INGOT: "&8Netherite"
+  GOLD_INGOT: "&6Gold"
+  IRON_INGOT: "&7Iron"
+
+messages:
+  no-permission: "&cYou do not have permission."
+  player-only: "&cOnly players may use this command."
+  admin-reload: "&a[AH] Reloaded configuration."
+  sell-success: "&a[AH] Listing created."
+  sell-cancelled: "&c[AH] Listing cancelled and item returned."
+  buy-success: "&a[AH] Purchase complete. Check /ah deliveries."
+  buy-not-enough: "&c[AH] You do not have enough {amount}x {currency}."
+  buy-own-item: "&c[AH] You cannot buy your own listing."
+  listing-gone: "&c[AH] Listing no longer exists."
+  claim-success: "&a[AH] Claimed: {desc}"
+  claim-none: "&7[AH] No deliveries to claim."
+  broadcast-sale: "&6[AH] &e{buyer} &6bought &e{item} &6from &e{seller} &6for &e{amount}x {currency}"
+
+shop:
+  categories:
+    blocks:
+      title: "&aBlocks"
+      items:
+        stone:
+          material: STONE
+          amount: 64
+          price: 1
+          currencies: [IRON_INGOT, GOLD_INGOT, EMERALD, DIAMOND]
+        cobblestone:
+          material: COBBLESTONE
+          amount: 64
+          price: 1
+          currencies: [IRON_INGOT, GOLD_INGOT, EMERALD, DIAMOND]
+        glass:
+          material: GLASS
+          amount: 64
+          price: 2
+          currencies: [IRON_INGOT, GOLD_INGOT, EMERALD, DIAMOND]
+        oak_planks:
+          material: OAK_PLANKS
+          amount: 64
+          price: 2
+          currencies: [IRON_INGOT, GOLD_INGOT, EMERALD, DIAMOND]
+        concrete:
+          material: WHITE_CONCRETE
+          amount: 64
+          price: 3
+          currencies: [IRON_INGOT, GOLD_INGOT, EMERALD, DIAMOND]
