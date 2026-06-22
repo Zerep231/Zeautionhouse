@@ -24,7 +24,7 @@ public class MineGui {
     public MineGui(AuctionHousePlugin plugin) { this.plugin = plugin; }
 
     public void open(Player player, int page) {
-        AhHolder holder = new AhHolder(GuiTag.MINE, "mine");
+        AhHolder holder = new AhHolder(GuiTag.MINE, "mine", page); // P0-5
         Inventory inv = Bukkit.createInventory(holder, 54,
                 Gfx.color("&fYour Listings &7– Page " + (page + 1)));
 

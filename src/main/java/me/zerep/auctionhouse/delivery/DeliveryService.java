@@ -32,25 +32,41 @@ public class DeliveryService {
         return deliveryRepository.countUnclaimed(playerUuid);
     }
 
-    /** Claim a single delivery by id.  Returns description string or null on failure. */
+    /**
+     * Claim a single delivery by id.
+     *
+     * P0-3 Fix: item/currency is given to the player FIRST, then the DB row is
+     * deleted.  If the server crashes after the give but before the delete the
+     * player gets the delivery twice on the next login — a minor duplication that
+     * is far better than permanent item loss under the previous delete-first order.
+     */
     public String claim(Player player, int deliveryId) {
         List<Delivery> deliveries = deliveryRepository.getUnclaimed(player.getUniqueId());
         Delivery target = deliveries.stream()
                 .filter(d -> d.id() == deliveryId).findFirst().orElse(null);
         if (target == null) return null;
-        if (!deliveryRepository.claim(deliveryId)) return null;
-        return giveDelivery(player, target);
+        String desc = giveDelivery(player, target); // give FIRST
+        deliveryRepository.claim(deliveryId);        // then remove record
+        return desc;
     }
 
     /**
-     * Atomic claim-all: all DB rows are deleted first, then items/currency are
-     * delivered to the player.  A disconnect after the DELETE still preserves
-     * all rows (WAL rollback), so nothing is lost.
+     * Claim-all: fetch rows, give all items/currency, then delete records.
+     *
+     * P0-3 Fix: same give-before-delete ordering as single claim.
      */
     public int claimAll(Player player) {
-        List<Delivery> claimed = deliveryRepository.claimAllAtomic(player.getUniqueId());
-        for (Delivery d : claimed) giveDelivery(player, d);
-        return claimed.size();
+        List<Delivery> unclaimed = deliveryRepository.getUnclaimed(player.getUniqueId());
+        if (unclaimed.isEmpty()) return 0;
+        for (Delivery d : unclaimed) giveDelivery(player, d); // give ALL first
+        // Then delete all in one shot
+        unclaimed.forEach(d -> deliveryRepository.claim(d.id()));
+        return unclaimed.size();
+    }
+
+    /** Paginated list for the Delivery GUI. */
+    public List<Delivery> getUnclaimedPage(UUID playerUuid, int offset, int limit) {
+        return deliveryRepository.getUnclaimedPage(playerUuid, offset, limit);
     }
 
     private String giveDelivery(Player player, Delivery d) {

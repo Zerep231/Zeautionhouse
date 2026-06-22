@@ -139,17 +139,21 @@ public class ListingService {
         if (!listing.sellerUuid().equals(seller.getUniqueId())) return false;
 
         try {
-            txManager.execute(conn -> {
-                listingRepository.updateStatusInTx(
+            boolean updated = txManager.execute(conn -> {
+                // P0-4 Fix: check the guard; if listing was already cancelled by another
+                // concurrent request, abort the transaction — do NOT insert a duplicate delivery
+                boolean ok = listingRepository.updateStatusInTx(
                         conn, listingId, Listing.Status.ACTIVE, Listing.Status.CANCELLED);
+                if (!ok) return false;
                 deliveryRepository.insertInTx(
                         conn, seller.getUniqueId(), Delivery.Type.CANCEL_RETURN,
                         listing.item(), 0, null);
                 auditLog.log(conn, AuditLogRepository.Action.CANCEL,
                         listingId, null, seller.getUniqueId(),
                         listing.displayName(), 0, listing.currency());
-                return null;
+                return true;
             });
+            if (!updated) return false;
         } catch (Exception e) {
             plugin.getLogger().severe("cancelListing tx failed: " + e.getMessage());
             return false;

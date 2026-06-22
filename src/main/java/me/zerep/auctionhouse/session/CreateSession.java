@@ -13,6 +13,7 @@ public class CreateSession {
     private String currency;
     private int price;
     private boolean confirmed;      // set to true just before listing is persisted
+    private boolean transitioning;  // true while GUI is switching steps (blocks onClose returnItem)
     private final long created;
 
     public CreateSession(ItemStack item, String defaultCurrency, int defaultPrice) {
@@ -31,8 +32,11 @@ public class CreateSession {
     public int getPrice() { return price; }
     public void setPrice(int price) { this.price = Math.max(1, price); }
 
-    public boolean isConfirmed() { return confirmed; }
-    public void markConfirmed() { this.confirmed = true; }
+    public boolean isConfirmed()   { return confirmed; }
+    public void markConfirmed()    { this.confirmed    = true; }
+
+    public boolean isTransitioning() { return transitioning; }
+    public void setTransitioning(boolean v) { this.transitioning = v; }
 
     /** Session older than 10 minutes is considered stale and its item should be returned. */
     public boolean isStale() {

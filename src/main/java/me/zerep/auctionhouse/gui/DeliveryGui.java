@@ -11,11 +11,14 @@ import java.util.List;
 
 /**
  * P1.1 Fix – Maps slot → delivery id so individual claims are always correct.
- * P2.2 Fix – Simplified navigation (Claim All, Back) friendly to Bedrock players.
+ * P1-5 Fix – Full pagination: PREV/NEXT buttons appear when needed.
  */
 public class DeliveryGui {
 
+    static final int ITEMS_PER_PAGE = 45;
+    static final int SLOT_PREV      = 46;
     static final int SLOT_CLAIM_ALL = 49;
+    static final int SLOT_NEXT      = 52;
     static final int SLOT_BACK      = 53;
 
     private final AuctionHousePlugin plugin;
@@ -23,16 +26,19 @@ public class DeliveryGui {
     public DeliveryGui(AuctionHousePlugin plugin) { this.plugin = plugin; }
 
     public void open(Player player, int page) {
-        AhHolder holder = new AhHolder(GuiTag.DELIVERY, "delivery");
+        AhHolder holder = new AhHolder(GuiTag.DELIVERY, "delivery", page); // P0-5
         Inventory inv = Bukkit.createInventory(holder, 54,
-                Gfx.color("&bDelivery Box"));
+                Gfx.color("&bDelivery Box &7– Page " + (page + 1)));
 
         for (int i = 0; i < 54; i++) inv.setItem(i, Gfx.filler());
 
-        List<Delivery> list = plugin.getDeliveryService().getUnclaimed(player.getUniqueId());
+        // P1-5: paginated load
+        List<Delivery> list = plugin.getDeliveryService()
+                .getUnclaimedPage(player.getUniqueId(), page * ITEMS_PER_PAGE, ITEMS_PER_PAGE);
+
         int slot = 0;
         for (Delivery d : list) {
-            if (slot >= 45) break;
+            if (slot >= ITEMS_PER_PAGE) break;
             if (d.isItemDelivery()) {
                 Material mat = d.item() != null ? d.item().getType() : Material.PAPER;
                 int amt = d.item() != null ? d.item().getAmount() : 1;
@@ -53,10 +59,17 @@ public class DeliveryGui {
             slot++;
         }
 
+        int total = plugin.getDeliveryService().countUnclaimed(player.getUniqueId());
+
         inv.setItem(SLOT_CLAIM_ALL, Gfx.item(Material.LIME_DYE,
-                "&aClaim All (" + list.size() + ")",
+                "&aClaim All (" + total + ")",
                 "&7Claim everything at once"));
         inv.setItem(SLOT_BACK, Gfx.item(Material.ARROW, "&cBack", "&7Return to browse"));
+
+        if (page > 0)
+            inv.setItem(SLOT_PREV, Gfx.item(Material.ARROW, "&7&l◀ Previous", "&7Page " + page));
+        if (list.size() == ITEMS_PER_PAGE)
+            inv.setItem(SLOT_NEXT, Gfx.item(Material.ARROW, "&7Next &l▶", "&7Page " + (page + 2)));
 
         player.openInventory(inv);
     }

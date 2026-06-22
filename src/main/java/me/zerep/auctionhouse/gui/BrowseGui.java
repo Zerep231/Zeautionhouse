@@ -31,7 +31,7 @@ public class BrowseGui {
     public BrowseGui(AuctionHousePlugin plugin) { this.plugin = plugin; }
 
     public void open(Player player, int page) {
-        AhHolder holder = new AhHolder(GuiTag.BROWSE, "browse");
+        AhHolder holder = new AhHolder(GuiTag.BROWSE, "browse", page); // P0-5: store page in holder
         Inventory inv = Bukkit.createInventory(holder, 54,
                 Gfx.color("&6AuctionHouse &7– Page " + (page + 1)));
 

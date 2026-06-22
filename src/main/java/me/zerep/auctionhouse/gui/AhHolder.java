@@ -15,6 +15,7 @@ public class AhHolder implements InventoryHolder {
 
     private final GuiTag tag;
     private final String key;
+    private final int page; // P0-5 Fix: store current page directly to avoid string-parsing bugs
 
     /** slot index → listing id */
     private final Map<Integer, Integer> slotToListingId  = new HashMap<>();
@@ -26,12 +27,18 @@ public class AhHolder implements InventoryHolder {
     private final Map<Integer, String>  slotToItemId     = new HashMap<>();
 
     public AhHolder(GuiTag tag, String key) {
-        this.tag = tag;
-        this.key = key;
+        this(tag, key, 0);
     }
 
-    public GuiTag tag() { return tag; }
-    public String key() { return key; }
+    public AhHolder(GuiTag tag, String key, int page) {
+        this.tag  = tag;
+        this.key  = key;
+        this.page = page;
+    }
+
+    public GuiTag tag()  { return tag; }
+    public String key()  { return key; }
+    public int    page() { return page; }
 
     public void mapListing (int slot, int listingId)   { slotToListingId .put(slot, listingId); }
     public void mapDelivery(int slot, int deliveryId)  { slotToDeliveryId.put(slot, deliveryId); }

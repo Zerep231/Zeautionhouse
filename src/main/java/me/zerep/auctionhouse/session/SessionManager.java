@@ -43,10 +43,15 @@ public class SessionManager {
     /**
      * Return the session item to the player's inventory (or drop it) and clear the session.
      * Safe to call even if no session exists.
+     *
+     * P0-1 Fix: if the session is flagged as transitioning (player is moving between
+     * CREATE_1 and CREATE_2) this is a no-op — the item must NOT be returned during
+     * a deliberate GUI switch.
      */
     public void returnItem(Player player) {
-        CreateSession session = remove(player.getUniqueId());
-        if (session == null || session.isConfirmed()) return;
+        CreateSession session = sessions.get(player.getUniqueId()); // peek first
+        if (session == null || session.isConfirmed() || session.isTransitioning()) return;
+        sessions.remove(player.getUniqueId());
         ItemStack item = session.getItem();
         if (item == null || item.getType().isAir()) return;
         var leftovers = player.getInventory().addItem(item);

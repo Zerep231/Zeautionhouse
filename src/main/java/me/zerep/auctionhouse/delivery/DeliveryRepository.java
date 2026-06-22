@@ -68,6 +68,23 @@ public class DeliveryRepository {
         return result;
     }
 
+    /** P1-5: paginated variant for the Delivery GUI. */
+    public synchronized List<Delivery> getUnclaimedPage(UUID playerUuid, int offset, int limit) {
+        List<Delivery> result = new ArrayList<>();
+        try (PreparedStatement ps = db.getConnection().prepareStatement(
+                "SELECT * FROM deliveries WHERE player_uuid=? AND claimed=0 ORDER BY created_at ASC LIMIT ? OFFSET ?")) {
+            ps.setString(1, playerUuid.toString());
+            ps.setInt(2, limit);
+            ps.setInt(3, offset);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) result.add(map(rs));
+            }
+        } catch (SQLException e) {
+            logger.severe("getUnclaimedPage: " + e.getMessage());
+        }
+        return result;
+    }
+
     public synchronized int countUnclaimed(UUID playerUuid) {
         try (PreparedStatement ps = db.getConnection().prepareStatement(
                 "SELECT COUNT(*) FROM deliveries WHERE player_uuid=? AND claimed=0")) {

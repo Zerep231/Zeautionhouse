@@ -109,7 +109,11 @@ public class GuiListener implements Listener {
 
             String defaultCurrency = plugin.getCurrencyRegistry().defaultKey();
             int defaultPrice = plugin.getConfig().getInt("default-price", 1);
-            plugin.getSessionManager().start(p.getUniqueId(), realItem, defaultCurrency, defaultPrice);
+            var session = plugin.getSessionManager().start(p.getUniqueId(), realItem, defaultCurrency, defaultPrice);
+
+            // P0-1 Fix: mark transitioning BEFORE scheduling step 2 so that the
+            // InventoryCloseEvent fired when CREATE_1 closes does NOT call returnItem()
+            session.setTransitioning(true);
 
             // Delay one tick so inventory close fires cleanly before opening step 2
             plugin.getServer().getScheduler().runTask(plugin, () -> gui.openCreateStep2(p));
@@ -141,6 +145,12 @@ public class GuiListener implements Listener {
                 p.sendMessage(plugin.msg("sell-limit"));
                 plugin.getSessionManager().returnItem(p);
                 p.closeInventory();
+                return;
+            }
+            // P2-1 Fix: enforce max-price in GUI confirm (only quick-sell validated it before)
+            int maxPrice = plugin.getConfig().getInt("max-price", 999999);
+            if (session.getPrice() > maxPrice) {
+                p.sendMessage(plugin.msg("sell-price-too-high"));
                 return;
             }
             session.markConfirmed();
@@ -182,6 +192,18 @@ public class GuiListener implements Listener {
             return;
         }
 
+        // P1-5: delivery pagination
+        if (raw == DeliveryGui.SLOT_PREV) {
+            int pg = Math.max(0, holder.page() - 1);
+            plugin.getServer().getScheduler().runTask(plugin, () -> gui.openDelivery(p, pg));
+            return;
+        }
+        if (raw == DeliveryGui.SLOT_NEXT) {
+            int pg = holder.page() + 1;
+            plugin.getServer().getScheduler().runTask(plugin, () -> gui.openDelivery(p, pg));
+            return;
+        }
+
         if (raw == DeliveryGui.SLOT_CLAIM_ALL) {
             int count = plugin.getDeliveryService().claimAll(p);
             p.sendMessage(count > 0
@@ -197,7 +219,7 @@ public class GuiListener implements Listener {
         String desc = plugin.getDeliveryService().claim(p, deliveryId);
         if (desc != null) p.sendMessage(plugin.msg("claim-success").replace("{desc}", desc));
         else              p.sendMessage(plugin.msg("claim-none"));
-        plugin.getServer().getScheduler().runTask(plugin, () -> gui.openDelivery(p, 0));
+        plugin.getServer().getScheduler().runTask(plugin, () -> gui.openDelivery(p, holder.page()));
     }
 
     // ─── BROWSE ──────────────────────────────────────────────────────────────
@@ -238,16 +260,9 @@ public class GuiListener implements Listener {
     }
 
     private void parsePage(AhHolder holder, int delta, Player p) {
-        // Page is stored as last segment in key: "browse:2"
-        String key = holder.key();
-        int page = 0;
-        try {
-            String[] parts = key.split(":");
-            if (parts.length > 1) page = Integer.parseInt(parts[parts.length - 1]);
-        } catch (NumberFormatException ignored) {}
-        int newPage = Math.max(0, page + delta);
-        final int fp = newPage;
-        plugin.getServer().getScheduler().runTask(plugin, () -> gui.openBrowse(p, fp));
+        // P0-5 Fix: read page directly from holder instead of fragile string parsing
+        int newPage = Math.max(0, holder.page() + delta);
+        plugin.getServer().getScheduler().runTask(plugin, () -> gui.openBrowse(p, newPage));
     }
 
     // ─── MINE ────────────────────────────────────────────────────────────────
@@ -269,12 +284,8 @@ public class GuiListener implements Listener {
     }
 
     private void parseMine(AhHolder holder, int delta, Player p) {
-        int page = 0;
-        try {
-            String[] parts = holder.key().split(":");
-            if (parts.length > 1) page = Integer.parseInt(parts[parts.length - 1]);
-        } catch (NumberFormatException ignored) {}
-        int np = Math.max(0, page + delta);
+        // P0-5 Fix: read page directly from holder
+        int np = Math.max(0, holder.page() + delta);
         plugin.getServer().getScheduler().runTask(plugin, () -> gui.openMine(p, np));
     }
 

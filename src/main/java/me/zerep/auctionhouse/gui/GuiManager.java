@@ -69,22 +69,29 @@ public class GuiManager implements Listener {
     }
 
     /**
-     * P2.2 – Bedrock players receive a clear text instruction; Java players
-     * get the normal Step-1 inventory GUI.
+     * Opens the Create-Listing GUI for every player.
+     *
+     * P2.2 – Java players get the normal drag-and-drop step-1 inventory GUI.
+     * Bedrock players get the SAME GUI (Geyser renders it fine with left-click)
+     * PLUS a one-time hint that /ah sell <price> [currency] is faster for them.
+     * The GUI is never blocked — only an extra tip is shown.
      */
     public void openCreate(Player player) {
-        if (isBedrockPlayer(player)) {
-            player.sendMessage(plugin.msg("bedrock-sell-hint"));
-            return;
-        }
         // Clear any stale session before starting fresh
         plugin.getSessionManager().returnItem(player);
+
+        // Bedrock tip: still open GUI, just also show the command shortcut
+        if (isBedrockPlayer(player)) {
+            player.sendMessage(plugin.msg("bedrock-sell-hint"));
+        }
+
         createGui.openStep1(player);
     }
 
     public void openCreateStep2(Player player) {
         var session = plugin.getSessionManager().get(player.getUniqueId());
         if (session == null) { openBrowse(player, 0); return; }
+        session.setTransitioning(false); // P0-1: step 2 is now open — onClose may return item again
         createGui.openStep2(player, session);
     }
 
