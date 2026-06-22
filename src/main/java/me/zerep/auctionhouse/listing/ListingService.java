@@ -199,14 +199,20 @@ public class ListingService {
 
     private int countCurrency(Player player, Material mat) {
         int total = 0;
+        // Scan main inventory
         for (ItemStack it : player.getInventory().getContents())
             if (it != null && !it.getType().isAir() && it.getType() == mat) total += it.getAmount();
+        // Also scan off-hand slot (players could hide currency there to bypass checks)
+        ItemStack offhand = player.getInventory().getItemInOffHand();
+        if (!offhand.getType().isAir() && offhand.getType() == mat) total += offhand.getAmount();
         return total;
     }
 
     private boolean removeCurrency(Player player, Material mat, int amount) {
         int remaining = amount;
         var inv = player.getInventory();
+
+        // Remove from main inventory first
         ItemStack[] contents = inv.getContents();
         for (int i = 0; i < contents.length && remaining > 0; i++) {
             ItemStack it = contents[i];
@@ -216,6 +222,18 @@ public class ListingService {
             remaining -= take;
             if (it.getAmount() <= 0) inv.setItem(i, null);
         }
+
+        // Then remove from off-hand if still needed
+        if (remaining > 0) {
+            ItemStack offhand = inv.getItemInOffHand();
+            if (!offhand.getType().isAir() && offhand.getType() == mat) {
+                int take = Math.min(remaining, offhand.getAmount());
+                offhand.setAmount(offhand.getAmount() - take);
+                remaining -= take;
+                if (offhand.getAmount() <= 0) inv.setItemInOffHand(null);
+            }
+        }
+
         player.updateInventory();
         return remaining == 0;
     }
