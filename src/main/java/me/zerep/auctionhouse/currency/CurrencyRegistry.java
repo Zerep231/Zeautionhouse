@@ -6,6 +6,7 @@ import org.bukkit.Material;
 import java.util.*;
 
 public class CurrencyRegistry {
+
     private final AuctionHousePlugin plugin;
     private final Map<String, Currency> currencies = new LinkedHashMap<>();
 
@@ -19,22 +20,19 @@ public class CurrencyRegistry {
         for (String raw : plugin.getConfig().getStringList("currencies")) {
             Material mat = Material.matchMaterial(raw);
             if (mat == null) continue;
+            String key = raw.toUpperCase(Locale.ROOT);
             String display = plugin.getConfig().getString("currency-display." + raw, raw.replace('_', ' '));
-            currencies.put(raw.toUpperCase(Locale.ROOT), new Currency(raw.toUpperCase(Locale.ROOT), mat, display));
+            currencies.put(key, new Currency(key, mat, display));
         }
     }
 
-    public List<Currency> getAll() {
-        return List.copyOf(currencies.values());
-    }
-
-    public Currency get(String key) {
-        return currencies.get(key.toUpperCase(Locale.ROOT));
-    }
+    public List<Currency> getAll()      { return List.copyOf(currencies.values()); }
+    public Currency get(String key)     { return key == null ? null : currencies.get(key.toUpperCase(Locale.ROOT)); }
+    public String defaultKey()          { return currencies.isEmpty() ? "DIAMOND" : currencies.keySet().iterator().next(); }
 
     public String displayName(String key) {
         Currency c = get(key);
-        return c != null ? c.displayName() : key.replace('_', ' ');
+        return c != null ? c.displayName() : (key != null ? key.replace('_', ' ') : "?");
     }
 
     public boolean isAllowed(Material mat) {

@@ -19,6 +19,9 @@ public record Listing(
 
     public String displayName() {
         if (item == null) return "Unknown";
-        return item.getType().name().replace('_', ' ') + " x" + quantity;
+        String base = item.hasItemMeta() && item.getItemMeta().hasDisplayName()
+                ? item.getItemMeta().getDisplayName()
+                : item.getType().name().replace('_', ' ');
+        return base + " x" + quantity;
     }
 }

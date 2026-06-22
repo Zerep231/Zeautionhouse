@@ -3,6 +3,7 @@ listing-expire-hours: 72
 expire-check-interval-minutes: 10
 broadcast-sales: true
 max-price: 999999
+default-price: 1
 
 currencies:
   - DIAMOND
@@ -21,15 +22,24 @@ currency-display:
 messages:
   no-permission: "&cYou do not have permission."
   player-only: "&cOnly players may use this command."
-  admin-reload: "&a[AH] Reloaded configuration."
-  sell-success: "&a[AH] Listing created."
-  sell-cancelled: "&c[AH] Listing cancelled and item returned."
-  buy-success: "&a[AH] Purchase complete. Check /ah deliveries."
-  buy-not-enough: "&c[AH] You do not have enough {amount}x {currency}."
+  admin-reload: "&a[AH] Config reloaded."
+  sell-success: "&a[AH] Your listing has been created."
+  sell-cancelled: "&c[AH] Listing cancelled — item returned to your inbox."
+  sell-error: "&c[AH] Failed to create listing. Please try again."
+  sell-limit: "&c[AH] You have reached your listing limit."
+  sell-no-item: "&c[AH] Hold an item in your main hand to sell it."
+  sell-invalid-price: "&c[AH] Invalid price. Use a positive number."
+  sell-price-too-high: "&c[AH] Price exceeds the server maximum."
+  sell-invalid-currency: "&c[AH] Unknown currency. Use /ah sell <price> <DIAMOND|EMERALD|...>"
+  buy-success: "&a[AH] Purchase complete! Check /ah deliveries."
+  buy-not-enough: "&c[AH] You need &e{amount}x {currency} &cto buy this."
   buy-own-item: "&c[AH] You cannot buy your own listing."
-  listing-gone: "&c[AH] Listing no longer exists."
+  listing-gone: "&c[AH] That listing is no longer available."
   claim-success: "&a[AH] Claimed: {desc}"
-  claim-none: "&7[AH] No deliveries to claim."
+  claim-none: "&7[AH] You have nothing to claim."
+  shop-buy-success: "&a[AH] Purchased from Build Shop! Check your inventory."
+  # P2.2 – shown to Bedrock players instead of the drag-and-drop GUI
+  bedrock-sell-hint: "&e[AH] &7Hold your item and type &f/ah sell <price> [currency]&7 to list it."
   broadcast-sale: "&6[AH] &e{buyer} &6bought &e{item} &6from &e{seller} &6for &e{amount}x {currency}"
 
 shop:
@@ -57,8 +67,46 @@ shop:
           amount: 64
           price: 2
           currencies: [IRON_INGOT, GOLD_INGOT, EMERALD, DIAMOND]
-        concrete:
+        white_concrete:
           material: WHITE_CONCRETE
           amount: 64
           price: 3
           currencies: [IRON_INGOT, GOLD_INGOT, EMERALD, DIAMOND]
+        oak_log:
+          material: OAK_LOG
+          amount: 64
+          price: 2
+          currencies: [IRON_INGOT, GOLD_INGOT, EMERALD, DIAMOND]
+        sand:
+          material: SAND
+          amount: 64
+          price: 1
+          currencies: [IRON_INGOT, GOLD_INGOT, EMERALD, DIAMOND]
+        gravel:
+          material: GRAVEL
+          amount: 64
+          price: 1
+          currencies: [IRON_INGOT, GOLD_INGOT, EMERALD, DIAMOND]
+    decoration:
+      title: "&dDecoration"
+      items:
+        lantern:
+          material: LANTERN
+          amount: 16
+          price: 2
+          currencies: [IRON_INGOT, GOLD_INGOT, EMERALD, DIAMOND]
+        flower_pot:
+          material: FLOWER_POT
+          amount: 16
+          price: 1
+          currencies: [IRON_INGOT, GOLD_INGOT, EMERALD, DIAMOND]
+        sea_lantern:
+          material: SEA_LANTERN
+          amount: 16
+          price: 3
+          currencies: [GOLD_INGOT, EMERALD, DIAMOND]
+        glowstone:
+          material: GLOWSTONE
+          amount: 32
+          price: 2
+          currencies: [GOLD_INGOT, EMERALD, DIAMOND]

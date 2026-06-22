@@ -10,6 +10,4 @@ public enum GuiTag {
     SHOP_CAT,
     SHOP_ITEM,
     SHOP_CONFIRM;
-
-    public static final String HOLDER_PREFIX = "AH:";
 }

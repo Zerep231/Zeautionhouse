@@ -15,7 +15,5 @@ public record Delivery(
 ) {
     public enum Type { SALE, ITEM_RETURN, CANCEL_RETURN, EXPIRED_RETURN, SHOP_PURCHASE }
 
-    public boolean isItemDelivery() {
-        return item != null;
-    }
+    public boolean isItemDelivery() { return item != null; }
 }

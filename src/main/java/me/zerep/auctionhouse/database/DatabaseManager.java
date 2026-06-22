@@ -8,7 +8,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+/**
+ * Manages the SQLite connection and schema.
+ * Added audit_log table (P1.3) and WAL + busy-timeout pragmas for concurrency safety.
+ */
 public class DatabaseManager {
+
     private final AuctionHousePlugin plugin;
     private Connection connection;
     private ExecutorService dbExecutor;
@@ -27,7 +32,7 @@ public class DatabaseManager {
                 st.execute("PRAGMA journal_mode=WAL");
                 st.execute("PRAGMA synchronous=NORMAL");
                 st.execute("PRAGMA foreign_keys=ON");
-                st.execute("PRAGMA busy_timeout=5000");
+                st.execute("PRAGMA busy_timeout=10000");
             }
             createSchema();
             dbExecutor = Executors.newSingleThreadExecutor(r -> {
@@ -42,60 +47,67 @@ public class DatabaseManager {
 
     private void createSchema() throws SQLException {
         try (Statement st = connection.createStatement()) {
+
             st.execute("""
                 CREATE TABLE IF NOT EXISTS listings (
-                  id INTEGER PRIMARY KEY AUTOINCREMENT,
-                  seller_uuid TEXT NOT NULL,
-                  seller_name TEXT NOT NULL,
-                  item TEXT NOT NULL,
-                  quantity INTEGER NOT NULL,
-                  price INTEGER NOT NULL,
-                  currency TEXT NOT NULL,
-                  status TEXT NOT NULL DEFAULT 'ACTIVE',
-                  created_at INTEGER NOT NULL
+                  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                  seller_uuid TEXT    NOT NULL,
+                  seller_name TEXT    NOT NULL,
+                  item        TEXT    NOT NULL,
+                  quantity    INTEGER NOT NULL,
+                  price       INTEGER NOT NULL,
+                  currency    TEXT    NOT NULL,
+                  status      TEXT    NOT NULL DEFAULT 'ACTIVE',
+                  created_at  INTEGER NOT NULL
                 )""");
             st.execute("CREATE INDEX IF NOT EXISTS idx_listings_status ON listings(status)");
-            st.execute("CREATE INDEX IF NOT EXISTS idx_listings_seller ON listings(seller_uuid, status)");
+            st.execute("CREATE INDEX IF NOT EXISTS idx_listings_seller ON listings(seller_uuid,status)");
 
             st.execute("""
                 CREATE TABLE IF NOT EXISTS deliveries (
-                  id INTEGER PRIMARY KEY AUTOINCREMENT,
-                  player_uuid TEXT NOT NULL,
-                  type TEXT NOT NULL,
-                  item TEXT,
-                  amount INTEGER NOT NULL DEFAULT 0,
-                  currency TEXT,
-                  claimed INTEGER NOT NULL DEFAULT 0,
-                  created_at INTEGER NOT NULL
+                  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                  player_uuid TEXT    NOT NULL,
+                  type        TEXT    NOT NULL,
+                  item        TEXT,
+                  amount      INTEGER NOT NULL DEFAULT 0,
+                  currency    TEXT,
+                  claimed     INTEGER NOT NULL DEFAULT 0,
+                  created_at  INTEGER NOT NULL
                 )""");
-            st.execute("CREATE INDEX IF NOT EXISTS idx_deliveries_player ON deliveries(player_uuid, claimed)");
+            st.execute("CREATE INDEX IF NOT EXISTS idx_deliveries_player ON deliveries(player_uuid,claimed)");
 
+            // P1.3 – audit log
             st.execute("""
-                CREATE TABLE IF NOT EXISTS transactions (
-                  id INTEGER PRIMARY KEY AUTOINCREMENT,
-                  listing_id INTEGER NOT NULL,
-                  buyer_uuid TEXT NOT NULL,
-                  seller_uuid TEXT NOT NULL,
-                  price INTEGER NOT NULL,
-                  currency TEXT NOT NULL,
-                  created_at INTEGER NOT NULL
+                CREATE TABLE IF NOT EXISTS audit_log (
+                  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                  action      TEXT    NOT NULL,
+                  listing_id  INTEGER,
+                  buyer_uuid  TEXT,
+                  seller_uuid TEXT,
+                  item_desc   TEXT,
+                  amount      INTEGER,
+                  currency    TEXT,
+                  created_at  INTEGER NOT NULL
                 )""");
+            st.execute("CREATE INDEX IF NOT EXISTS idx_audit_listing ON audit_log(listing_id)");
+            st.execute("CREATE INDEX IF NOT EXISTS idx_audit_buyer   ON audit_log(buyer_uuid)");
+            st.execute("CREATE INDEX IF NOT EXISTS idx_audit_seller  ON audit_log(seller_uuid)");
 
             st.execute("""
                 CREATE TABLE IF NOT EXISTS shop_categories (
-                  id TEXT PRIMARY KEY,
-                  title TEXT NOT NULL,
+                  id         TEXT PRIMARY KEY,
+                  title      TEXT    NOT NULL,
                   sort_order INTEGER NOT NULL DEFAULT 0
                 )""");
 
             st.execute("""
                 CREATE TABLE IF NOT EXISTS shop_items (
-                  id TEXT PRIMARY KEY,
-                  category_id TEXT NOT NULL,
-                  material TEXT NOT NULL,
-                  amount INTEGER NOT NULL,
-                  price INTEGER NOT NULL,
-                  currency_options TEXT NOT NULL
+                  id               TEXT PRIMARY KEY,
+                  category_id      TEXT    NOT NULL,
+                  material         TEXT    NOT NULL,
+                  amount           INTEGER NOT NULL,
+                  price            INTEGER NOT NULL,
+                  currency_options TEXT    NOT NULL
                 )""");
         }
     }

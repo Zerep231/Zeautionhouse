@@ -8,7 +8,13 @@ import java.sql.*;
 import java.util.*;
 import java.util.logging.Logger;
 
+/**
+ * Low-level DB access for listings.
+ * P1.4: getActiveAll() is provided for the cache loader; callers should go through
+ * ListingService which manages the ListingCache layer.
+ */
 public class ListingRepository {
+
     private final DatabaseManager db;
     private final Logger logger;
 
@@ -17,8 +23,9 @@ public class ListingRepository {
         this.logger = logger;
     }
 
-    public synchronized int insert(UUID sellerUuid, String sellerName, ItemStack item, int quantity, int price, String currency) {
-        String sql = "INSERT INTO listings (seller_uuid,seller_name,item,quantity,price,currency,status,created_at) VALUES (?,?,?,?,? ,?,'ACTIVE',?)";
+    public synchronized int insert(UUID sellerUuid, String sellerName,
+                                   ItemStack item, int quantity, int price, String currency) {
+        String sql = "INSERT INTO listings (seller_uuid,seller_name,item,quantity,price,currency,status,created_at) VALUES (?,?,?,?,?,?,'ACTIVE',?)";
         try (PreparedStatement ps = db.getConnection().prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, sellerUuid.toString());
             ps.setString(2, sellerName);
@@ -49,23 +56,24 @@ public class ListingRepository {
         return null;
     }
 
-    public synchronized List<Listing> getActive(int offset, int limit) {
+    /** Full active-listing list used by the cache refresh. */
+    public synchronized List<Listing> getActiveAll() {
         List<Listing> result = new ArrayList<>();
-        try (PreparedStatement ps = db.getConnection().prepareStatement("SELECT * FROM listings WHERE status='ACTIVE' ORDER BY created_at DESC LIMIT ? OFFSET ?")) {
-            ps.setInt(1, limit);
-            ps.setInt(2, offset);
+        try (PreparedStatement ps = db.getConnection().prepareStatement(
+                "SELECT * FROM listings WHERE status='ACTIVE' ORDER BY created_at DESC")) {
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) result.add(map(rs));
             }
         } catch (SQLException e) {
-            logger.severe("getActive: " + e.getMessage());
+            logger.severe("getActiveAll: " + e.getMessage());
         }
         return result;
     }
 
     public synchronized List<Listing> getByPlayer(UUID player, int offset, int limit) {
         List<Listing> result = new ArrayList<>();
-        try (PreparedStatement ps = db.getConnection().prepareStatement("SELECT * FROM listings WHERE seller_uuid=? ORDER BY created_at DESC LIMIT ? OFFSET ?")) {
+        try (PreparedStatement ps = db.getConnection().prepareStatement(
+                "SELECT * FROM listings WHERE seller_uuid=? ORDER BY created_at DESC LIMIT ? OFFSET ?")) {
             ps.setString(1, player.toString());
             ps.setInt(2, limit);
             ps.setInt(3, offset);
@@ -79,7 +87,8 @@ public class ListingRepository {
     }
 
     public synchronized int countActive(UUID seller) {
-        try (PreparedStatement ps = db.getConnection().prepareStatement("SELECT COUNT(*) FROM listings WHERE seller_uuid=? AND status='ACTIVE'")) {
+        try (PreparedStatement ps = db.getConnection().prepareStatement(
+                "SELECT COUNT(*) FROM listings WHERE seller_uuid=? AND status='ACTIVE'")) {
             ps.setString(1, seller.toString());
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) return rs.getInt(1);
@@ -90,19 +99,9 @@ public class ListingRepository {
         return 0;
     }
 
-    public synchronized int countActive() {
-        try (PreparedStatement ps = db.getConnection().prepareStatement("SELECT COUNT(*) FROM listings WHERE status='ACTIVE'")) {
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) return rs.getInt(1);
-            }
-        } catch (SQLException e) {
-            logger.severe("countActive all: " + e.getMessage());
-        }
-        return 0;
-    }
-
     public synchronized boolean updateStatus(int id, Listing.Status status) {
-        try (PreparedStatement ps = db.getConnection().prepareStatement("UPDATE listings SET status=? WHERE id=?")) {
+        try (PreparedStatement ps = db.getConnection().prepareStatement(
+                "UPDATE listings SET status=? WHERE id=?")) {
             ps.setString(1, status.name());
             ps.setInt(2, id);
             return ps.executeUpdate() > 0;
@@ -112,11 +111,26 @@ public class ListingRepository {
         return false;
     }
 
+    /**
+     * Atomic status change used inside an existing transaction connection.
+     * Returns true only if exactly one row was changed (guards against double-sell).
+     */
+    public boolean updateStatusInTx(Connection conn, int id, Listing.Status from, Listing.Status to) throws SQLException {
+        try (PreparedStatement ps = conn.prepareStatement(
+                "UPDATE listings SET status=? WHERE id=? AND status=?")) {
+            ps.setString(1, to.name());
+            ps.setInt(2, id);
+            ps.setString(3, from.name());
+            return ps.executeUpdate() == 1;
+        }
+    }
+
     public synchronized List<Listing> getExpired(int expireHours) {
         if (expireHours <= 0) return List.of();
-        long cutoff = System.currentTimeMillis() - expireHours * 3600_000L;
+        long cutoff = System.currentTimeMillis() - expireHours * 3_600_000L;
         List<Listing> result = new ArrayList<>();
-        try (PreparedStatement ps = db.getConnection().prepareStatement("SELECT * FROM listings WHERE status='ACTIVE' AND created_at < ?")) {
+        try (PreparedStatement ps = db.getConnection().prepareStatement(
+                "SELECT * FROM listings WHERE status='ACTIVE' AND created_at < ?")) {
             ps.setLong(1, cutoff);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) result.add(map(rs));
@@ -125,16 +139,6 @@ public class ListingRepository {
             logger.severe("getExpired: " + e.getMessage());
         }
         return result;
-    }
-
-    public synchronized boolean delete(int id) {
-        try (PreparedStatement ps = db.getConnection().prepareStatement("DELETE FROM listings WHERE id=?")) {
-            ps.setInt(1, id);
-            return ps.executeUpdate() > 0;
-        } catch (SQLException e) {
-            logger.severe("delete listing: " + e.getMessage());
-        }
-        return false;
     }
 
     private Listing map(ResultSet rs) throws SQLException {

@@ -2,208 +2,414 @@ package me.zerep.auctionhouse.gui;
 
 import me.zerep.auctionhouse.AuctionHousePlugin;
 import me.zerep.auctionhouse.delivery.Delivery;
-import me.zerep.auctionhouse.listing.Listing;
 import me.zerep.auctionhouse.listing.ListingService;
+import me.zerep.auctionhouse.session.CreateSession;
 import me.zerep.auctionhouse.shop.ShopService;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.*;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
+/**
+ * Handles all inventory events for AH GUIs.
+ *
+ * P0.5 Fix – Every dupe vector is blocked:
+ *   NUMBER_KEY, SWAP_OFFHAND, DOUBLE_CLICK, COLLECT_TO_CURSOR, CREATIVE mode drops.
+ *   InventoryDragEvent cancels all drags except the CREATE_1 input slot.
+ *
+ * P0.3 Fix – SessionManager replaces per-player metadata keys.
+ * P0.4 Fix – Real item is moved into session on Next click; GUI holds only clone.
+ * P1.1 Fix – Click handlers use AhHolder.getListing/getDelivery() slot maps.
+ */
 public class GuiListener implements Listener {
+
     private final AuctionHousePlugin plugin;
     private final GuiManager gui;
 
     public GuiListener(AuctionHousePlugin plugin, GuiManager gui) {
         this.plugin = plugin;
-        this.gui = gui;
+        this.gui    = gui;
     }
 
-    @EventHandler
+    // ─────────────────────────────────────────────────────────────────────────
+    // Main click dispatcher
+    // ─────────────────────────────────────────────────────────────────────────
+
+    @EventHandler(priority = EventPriority.HIGH)
     public void onClick(InventoryClickEvent e) {
         if (!(e.getWhoClicked() instanceof Player p)) return;
         Inventory top = e.getView().getTopInventory();
         if (!(top.getHolder() instanceof AhHolder holder)) return;
 
-        int raw = e.getRawSlot();
-        boolean topClick = raw < top.getSize();
+        int raw      = e.getRawSlot();
+        boolean topClick = raw >= 0 && raw < top.getSize();
 
-        if (holder.tag() == GuiTag.CREATE_1) {
-            handleCreate1(p, e, raw, topClick);
-            return;
-        }
-        if (holder.tag() == GuiTag.CREATE_2) {
-            handleCreate2(p, e, raw, topClick);
-            return;
-        }
-        if (holder.tag() == GuiTag.DELIVERY) {
-            handleDelivery(p, e, raw, topClick);
-            return;
-        }
-        if (holder.tag() == GuiTag.BROWSE) {
-            handleBrowse(p, e, raw, topClick);
-            return;
-        }
-        if (holder.tag() == GuiTag.MINE) {
-            handleMine(p, e, raw, topClick);
-            return;
-        }
-        if (holder.tag() == GuiTag.SHOP_HOME) {
-            handleShopHome(p, e, raw, topClick);
+        switch (holder.tag()) {
+            case CREATE_1  -> handleCreate1(p, e, raw, topClick, top, holder);
+            case CREATE_2  -> handleCreate2(p, e, raw, topClick, holder);
+            case DELIVERY  -> handleDelivery(p, e, raw, topClick, holder);
+            case BROWSE    -> handleBrowse(p, e, raw, topClick, holder);
+            case MINE      -> handleMine(p, e, raw, topClick, holder);
+            case SHOP_HOME -> handleShopHome(p, e, raw, topClick, holder);
+            case SHOP_CAT  -> handleShopCat(p, e, raw, topClick, holder);
+            case SHOP_CONFIRM -> handleShopConfirm(p, e, raw, topClick, holder);
+            default -> e.setCancelled(true);
         }
     }
 
-    private void handleCreate1(Player p, InventoryClickEvent e, int raw, boolean topClick) {
-        ItemStack current = e.getCurrentItem();
-        if (topClick) {
-            if (raw == CreateListingGui.INPUT_SLOT) {
-                if (e.getClick() == ClickType.NUMBER_KEY || e.getClick() == ClickType.SWAP_OFFHAND || e.getClick() == ClickType.DOUBLE_CLICK || e.getAction() == InventoryAction.COLLECT_TO_CURSOR) {
-                    e.setCancelled(true);
-                } else {
-                    e.setCancelled(false);
-                }
-            } else {
+    // ─── CREATE STEP 1 ───────────────────────────────────────────────────────
+
+    private void handleCreate1(Player p, InventoryClickEvent e,
+                                int raw, boolean topClick,
+                                Inventory top, AhHolder holder) {
+        // P0.5 – Block all dupe vectors
+        if (isDupeAction(e)) { e.setCancelled(true); return; }
+
+        if (!topClick) {
+            // Bottom inventory: block shift-click in
+            if (isShiftClick(e) || e.getAction() == InventoryAction.COLLECT_TO_CURSOR) {
                 e.setCancelled(true);
-                if (raw == CreateListingGui.NEXT_SLOT && current != null && current.getType() != Material.AIR) {
-                    ItemStack item = p.getOpenInventory().getTopInventory().getItem(CreateListingGui.INPUT_SLOT);
-                    if (item != null && item.getType() != Material.AIR) {
-                        gui.openCreate(p); // fallback, actual step2 is handled from open
-                        // step2 will be opened in close-safe flow by listener
-                    }
-                }
             }
-        } else {
-            if (e.getClick() == ClickType.SHIFT_LEFT || e.getClick() == ClickType.SHIFT_RIGHT || e.getClick() == ClickType.NUMBER_KEY || e.getAction() == InventoryAction.COLLECT_TO_CURSOR) e.setCancelled(true);
+            return;
         }
-    }
 
-    private void handleCreate2(Player p, InventoryClickEvent e, int raw, boolean topClick) {
-        e.setCancelled(true);
-        if (!topClick) return;
-        if (raw == 20) {
+        if (raw == CreateListingGui.INPUT_SLOT) {
+            // Allow normal place/pickup only; block everything else
+            e.setCancelled(false);
+            return;
+        }
+
+        e.setCancelled(true); // cancel all other top slots by default
+
+        if (raw == CreateListingGui.CANCEL_SLOT) {
+            // Return any item still in the slot, clear session
+            ItemStack inSlot = top.getItem(CreateListingGui.INPUT_SLOT);
+            if (inSlot != null && !inSlot.getType().isAir()) {
+                top.setItem(CreateListingGui.INPUT_SLOT, null);
+                giveOrDrop(p, inSlot);
+            }
+            plugin.getSessionManager().returnItem(p);
             p.closeInventory();
             return;
         }
-        if (raw == 24) {
-            ItemStack item = p.getMetadata("ah_create_item").isEmpty() ? null : (ItemStack) p.getMetadata("ah_create_item").get(0).value();
-            Integer price = p.getMetadata("ah_create_price").isEmpty() ? null : (Integer) p.getMetadata("ah_create_price").get(0).value();
-            String currency = p.getMetadata("ah_create_currency").isEmpty() ? null : (String) p.getMetadata("ah_create_currency").get(0).value();
-            if (item != null && price != null && currency != null) {
-                int id = plugin.getListingService().createListing(p, item, price, currency);
-                if (id > 0) p.sendMessage(plugin.msg("sell-success"));
+
+        if (raw == CreateListingGui.NEXT_SLOT) {
+            ItemStack inSlot = top.getItem(CreateListingGui.INPUT_SLOT);
+            if (inSlot == null || inSlot.getType().isAir()) {
+                p.sendMessage(plugin.msg("sell-no-item"));
+                return;
+            }
+            // P0.4 – Take real item NOW; GUI gets a clean slot
+            ItemStack realItem = inSlot.clone();
+            top.setItem(CreateListingGui.INPUT_SLOT, null);
+
+            String defaultCurrency = plugin.getCurrencyRegistry().defaultKey();
+            int defaultPrice = plugin.getConfig().getInt("default-price", 1);
+            plugin.getSessionManager().start(p.getUniqueId(), realItem, defaultCurrency, defaultPrice);
+
+            // Delay one tick so inventory close fires cleanly before opening step 2
+            plugin.getServer().getScheduler().runTask(plugin, () -> gui.openCreateStep2(p));
+        }
+    }
+
+    // ─── CREATE STEP 2 ───────────────────────────────────────────────────────
+
+    private void handleCreate2(Player p, InventoryClickEvent e,
+                                int raw, boolean topClick, AhHolder holder) {
+        e.setCancelled(true);
+        if (!topClick) return;
+
+        CreateSession session = plugin.getSessionManager().get(p.getUniqueId());
+        if (session == null) { p.closeInventory(); return; }
+
+        // Back
+        if (raw == CreateListingGui.BACK_SLOT) {
+            plugin.getSessionManager().returnItem(p);
+            plugin.getServer().getScheduler().runTask(plugin, () -> gui.openCreate(p));
+            return;
+        }
+
+        // Confirm
+        if (raw == CreateListingGui.CONFIRM_SLOT) {
+            int max = plugin.getConfig().getInt("max-per-player", 10);
+            if (!p.hasPermission("ah.bypass-limit")
+                    && plugin.getListingService().countActive(p) >= max) {
+                p.sendMessage(plugin.msg("sell-limit"));
+                plugin.getSessionManager().returnItem(p);
+                p.closeInventory();
+                return;
+            }
+            session.markConfirmed();
+            int id = plugin.getListingService().createListing(
+                    p, session.getItem(), session.getPrice(), session.getCurrency());
+            plugin.getSessionManager().remove(p.getUniqueId());
+            if (id > 0) p.sendMessage(plugin.msg("sell-success"));
+            else        p.sendMessage(plugin.msg("sell-error"));
+            plugin.getServer().getScheduler().runTask(plugin, () -> gui.openBrowse(p, 0));
+            return;
+        }
+
+        // Price adjustments
+        if (raw == CreateListingGui.PRICE_MINUS10) { session.setPrice(session.getPrice() - 10); gui.openCreateStep2(p); return; }
+        if (raw == CreateListingGui.PRICE_MINUS1)  { session.setPrice(session.getPrice() - 1);  gui.openCreateStep2(p); return; }
+        if (raw == CreateListingGui.PRICE_PLUS1)   { session.setPrice(session.getPrice() + 1);  gui.openCreateStep2(p); return; }
+        if (raw == CreateListingGui.PRICE_PLUS10)  { session.setPrice(session.getPrice() + 10); gui.openCreateStep2(p); return; }
+
+        // Currency selector row (slots 19-25)
+        if (raw >= CreateListingGui.CURRENCY_START && raw <= 25) {
+            int idx = raw - CreateListingGui.CURRENCY_START;
+            var currencies = plugin.getCurrencyRegistry().getAll();
+            if (idx < currencies.size()) {
+                session.setCurrency(currencies.get(idx).key());
+                gui.openCreateStep2(p);
             }
         }
     }
 
-    private void handleDelivery(Player p, InventoryClickEvent e, int raw, boolean topClick) {
+    // ─── DELIVERY ────────────────────────────────────────────────────────────
+
+    private void handleDelivery(Player p, InventoryClickEvent e,
+                                 int raw, boolean topClick, AhHolder holder) {
         e.setCancelled(true);
         if (!topClick) return;
-        if (raw == 49) {
-            int count = plugin.getDeliveryService().claimAll(p);
-            p.sendMessage(count > 0 ? plugin.msg("claim-success").replace("{desc}", "Claim All x" + count) : plugin.msg("claim-none"));
-            gui.openDelivery(p, 0);
+
+        if (raw == DeliveryGui.SLOT_BACK) {
+            plugin.getServer().getScheduler().runTask(plugin, () -> gui.openBrowse(p, 0));
             return;
         }
-        Delivery d = plugin.getDeliveryService().getUnclaimed(p.getUniqueId()).stream().filter(x -> x != null).skip(raw).findFirst().orElse(null);
-        if (d != null) {
-            String desc = plugin.getDeliveryService().claim(p, d.id());
-            if (desc != null) p.sendMessage(plugin.msg("claim-success").replace("{desc}", desc));
-            else p.sendMessage(plugin.msg("claim-none"));
-            gui.openDelivery(p, 0);
+
+        if (raw == DeliveryGui.SLOT_CLAIM_ALL) {
+            int count = plugin.getDeliveryService().claimAll(p);
+            p.sendMessage(count > 0
+                    ? plugin.msg("claim-success").replace("{desc}", "x" + count + " items")
+                    : plugin.msg("claim-none"));
+            plugin.getServer().getScheduler().runTask(plugin, () -> gui.openDelivery(p, 0));
+            return;
         }
+
+        // Individual claim via slot map (P1.1 fix)
+        Integer deliveryId = holder.getDelivery(raw);
+        if (deliveryId == null) return;
+        String desc = plugin.getDeliveryService().claim(p, deliveryId);
+        if (desc != null) p.sendMessage(plugin.msg("claim-success").replace("{desc}", desc));
+        else              p.sendMessage(plugin.msg("claim-none"));
+        plugin.getServer().getScheduler().runTask(plugin, () -> gui.openDelivery(p, 0));
     }
 
-    private void handleBrowse(Player p, InventoryClickEvent e, int raw, boolean topClick) {
+    // ─── BROWSE ──────────────────────────────────────────────────────────────
+
+    private void handleBrowse(Player p, InventoryClickEvent e,
+                               int raw, boolean topClick, AhHolder holder) {
         e.setCancelled(true);
         if (!topClick) return;
-        if (raw == 45) { gui.openDelivery(p, 0); return; }
-        if (raw == 48) { gui.openMine(p, 0); return; }
-        if (raw == 49) { gui.openBrowse(p, 0); return; }
-        if (raw == 53) { new ShopGui(plugin).openHome(p); return; }
 
-        Listing l = plugin.getListingRepository().getActive(0, 54).stream().skip(raw).findFirst().orElse(null);
-        if (l == null) return;
-        ListingService.BuyResult result = plugin.getListingService().purchase(p, l.id());
+        if (raw == BrowseGui.SLOT_DELIVERIES) { plugin.getServer().getScheduler().runTask(plugin, () -> gui.openDelivery(p, 0));  return; }
+        if (raw == BrowseGui.SLOT_MINE)       { plugin.getServer().getScheduler().runTask(plugin, () -> gui.openMine(p, 0));      return; }
+        if (raw == BrowseGui.SLOT_REFRESH)    { plugin.getServer().getScheduler().runTask(plugin, () -> gui.openBrowse(p, 0));   return; }
+        if (raw == BrowseGui.SLOT_SHOP)       { plugin.getServer().getScheduler().runTask(plugin, () -> gui.openShopHome(p));    return; }
+
+        // Pagination
+        if (raw == BrowseGui.SLOT_PREV) { parsePage(holder, -1, p); return; }
+        if (raw == BrowseGui.SLOT_NEXT) { parsePage(holder, +1, p); return; }
+
+        // Buy via slot map (P1.1 fix)
+        Integer listingId = holder.getListing(raw);
+        if (listingId == null) return;
+
+        ListingService.BuyResult result = plugin.getListingService().purchase(p, listingId);
         switch (result) {
-            case SUCCESS -> p.sendMessage(plugin.msg("buy-success"));
-            case LISTING_GONE -> p.sendMessage(plugin.msg("listing-gone"));
-            case NOT_ENOUGH_CURRENCY -> p.sendMessage(plugin.msg("buy-not-enough").replace("{amount}", String.valueOf(l.price())).replace("{currency}", plugin.getCurrencyRegistry().displayName(l.currency())));
-            case OWN_LISTING -> p.sendMessage(plugin.msg("buy-own-item"));
+            case SUCCESS           -> p.sendMessage(plugin.msg("buy-success"));
+            case LISTING_GONE      -> p.sendMessage(plugin.msg("listing-gone"));
+            case OWN_LISTING       -> p.sendMessage(plugin.msg("buy-own-item"));
+            case NOT_ENOUGH_CURRENCY -> {
+                var l = plugin.getListingRepository().getById(listingId);
+                String cur = l != null ? plugin.getCurrencyRegistry().displayName(l.currency()) : "?";
+                String amt = l != null ? String.valueOf(l.price()) : "?";
+                p.sendMessage(plugin.msg("buy-not-enough")
+                        .replace("{amount}", amt).replace("{currency}", cur));
+            }
             default -> {}
         }
-        gui.openBrowse(p, 0);
+        plugin.getServer().getScheduler().runTask(plugin, () -> gui.openBrowse(p, 0));
     }
 
-    private void handleMine(Player p, InventoryClickEvent e, int raw, boolean topClick) {
+    private void parsePage(AhHolder holder, int delta, Player p) {
+        // Page is stored as last segment in key: "browse:2"
+        String key = holder.key();
+        int page = 0;
+        try {
+            String[] parts = key.split(":");
+            if (parts.length > 1) page = Integer.parseInt(parts[parts.length - 1]);
+        } catch (NumberFormatException ignored) {}
+        int newPage = Math.max(0, page + delta);
+        final int fp = newPage;
+        plugin.getServer().getScheduler().runTask(plugin, () -> gui.openBrowse(p, fp));
+    }
+
+    // ─── MINE ────────────────────────────────────────────────────────────────
+
+    private void handleMine(Player p, InventoryClickEvent e,
+                             int raw, boolean topClick, AhHolder holder) {
         e.setCancelled(true);
         if (!topClick) return;
-        if (raw == 49) {
-            gui.openBrowse(p, 0);
+
+        if (raw == MineGui.SLOT_BACK) { plugin.getServer().getScheduler().runTask(plugin, () -> gui.openBrowse(p, 0)); return; }
+        if (raw == MineGui.SLOT_PREV) { parseMine(holder, -1, p); return; }
+        if (raw == MineGui.SLOT_NEXT) { parseMine(holder, +1, p); return; }
+
+        Integer listingId = holder.getListing(raw);
+        if (listingId == null) return;
+        if (plugin.getListingService().cancelListing(p, listingId))
+            p.sendMessage(plugin.msg("sell-cancelled"));
+        plugin.getServer().getScheduler().runTask(plugin, () -> gui.openMine(p, 0));
+    }
+
+    private void parseMine(AhHolder holder, int delta, Player p) {
+        int page = 0;
+        try {
+            String[] parts = holder.key().split(":");
+            if (parts.length > 1) page = Integer.parseInt(parts[parts.length - 1]);
+        } catch (NumberFormatException ignored) {}
+        int np = Math.max(0, page + delta);
+        plugin.getServer().getScheduler().runTask(plugin, () -> gui.openMine(p, np));
+    }
+
+    // ─── SHOP HOME ───────────────────────────────────────────────────────────
+
+    private void handleShopHome(Player p, InventoryClickEvent e,
+                                 int raw, boolean topClick, AhHolder holder) {
+        e.setCancelled(true);
+        if (!topClick) return;
+        if (raw == 22) { plugin.getServer().getScheduler().runTask(plugin, () -> gui.openBrowse(p, 0)); return; }
+        String catId = holder.getCategory(raw);
+        if (catId == null) return;
+        plugin.getServer().getScheduler().runTask(plugin, () -> gui.openShopCategory(p, catId));
+    }
+
+    // ─── SHOP CATEGORY ───────────────────────────────────────────────────────
+
+    private void handleShopCat(Player p, InventoryClickEvent e,
+                                int raw, boolean topClick, AhHolder holder) {
+        e.setCancelled(true);
+        if (!topClick) return;
+        if (raw == 49) { plugin.getServer().getScheduler().runTask(plugin, () -> gui.openShopHome(p)); return; }
+        String compositeId = holder.getItemId(raw); // "catId:itemId"
+        if (compositeId == null) return;
+        String[] parts = compositeId.split(":", 2);
+        if (parts.length < 2) return;
+        ShopService.ShopEntry entry = plugin.getShopService().getEntry(parts[0], parts[1]);
+        if (entry == null) return;
+        Material defaultCur = entry.currencies().isEmpty() ? Material.DIAMOND : entry.currencies().get(0);
+        plugin.getServer().getScheduler().runTask(plugin,
+                () -> gui.openShopConfirm(p, parts[0], parts[1], defaultCur));
+    }
+
+    // ─── SHOP CONFIRM ────────────────────────────────────────────────────────
+
+    private void handleShopConfirm(Player p, InventoryClickEvent e,
+                                    int raw, boolean topClick, AhHolder holder) {
+        e.setCancelled(true);
+        if (!topClick) return;
+        // key format: "shop-confirm:catId:itemId"
+        String key = holder.key();
+        String[] parts = key.split(":", 3);
+        if (parts.length < 3) { p.closeInventory(); return; }
+        String catId  = parts[1];
+        String itemId = parts[2];
+        ShopService.ShopEntry entry = plugin.getShopService().getEntry(catId, itemId);
+        if (entry == null) { p.closeInventory(); return; }
+
+        if (raw == 15) { // Cancel
+            plugin.getServer().getScheduler().runTask(plugin, () -> gui.openShopCategory(p, catId));
             return;
         }
-        Listing l = plugin.getListingRepository().getByPlayer(p.getUniqueId(), 0, 54).stream().skip(raw).findFirst().orElse(null);
-        if (l == null) return;
-        if (plugin.getListingService().cancelListing(p, l.id())) {
-            p.sendMessage(plugin.msg("sell-cancelled"));
-        }
-        gui.openMine(p, 0);
-    }
-
-    private void handleShopHome(Player p, InventoryClickEvent e, int raw, boolean topClick) {
-        e.setCancelled(true);
-        if (!topClick) return;
-        if (raw < 10 || raw > 20) return;
-        int index = raw - 10;
-        var cats = plugin.getShopService().getCategories();
-        if (index >= cats.size()) return;
-        ShopService.ShopCategory cat = cats.get(index);
-        p.closeInventory();
-        p.sendMessage("§aSelected category: §f" + cat.title());
-        // simple next step: first item of category
-        if (!cat.items().isEmpty()) {
-            ShopService.ShopEntry entry = cat.items().get(0);
-            // direct open confirm-like flow by just stating item; can be expanded later
-            p.sendMessage("§7Use /ah shop again to browse. (§eV3.1 skeleton§7)");
+        if (raw == 11 && entry != null) { // Buy x1
+            Material currency = entry.currencies().isEmpty() ? Material.DIAMOND : entry.currencies().get(0);
+            boolean ok = plugin.getShopService().buy(p, entry, currency, 1, plugin.getDeliveryRepository());
+            p.sendMessage(ok ? plugin.msg("shop-buy-success") : plugin.msg("buy-not-enough")
+                    .replace("{amount}", String.valueOf(entry.price()))
+                    .replace("{currency}", currency.name().replace('_', ' ')));
+            plugin.getServer().getScheduler().runTask(plugin, () -> gui.openShopCategory(p, catId));
         }
     }
 
-    @EventHandler
+    // ─────────────────────────────────────────────────────────────────────────
+    // Drag event – P0.5
+    // ─────────────────────────────────────────────────────────────────────────
+
+    @EventHandler(priority = EventPriority.HIGH)
     public void onDrag(InventoryDragEvent e) {
         if (!(e.getWhoClicked() instanceof Player)) return;
         Inventory top = e.getView().getTopInventory();
         if (!(top.getHolder() instanceof AhHolder holder)) return;
+
         if (holder.tag() == GuiTag.CREATE_1) {
-            for (int raw : e.getRawSlots()) {
-                if (raw < top.getSize() && raw != CreateListingGui.INPUT_SLOT) {
+            // Allow drag only into the input slot; cancel if any affected slot is NOT the input slot
+            for (int slot : e.getRawSlots()) {
+                if (slot < top.getSize() && slot != CreateListingGui.INPUT_SLOT) {
                     e.setCancelled(true);
                     return;
                 }
             }
-            if (e.getRawSlots().stream().anyMatch(raw -> raw >= top.getSize())) {
+            // Also cancel if dragging from bottom inventory into top
+            if (e.getRawSlots().stream().anyMatch(s -> s >= top.getSize())) {
                 e.setCancelled(true);
             }
             return;
         }
-        e.setCancelled(true);
+        e.setCancelled(true); // cancel all drags in every other AH GUI
     }
 
-    @EventHandler
+    // ─────────────────────────────────────────────────────────────────────────
+    // Close event – P0.4 item safety
+    // ─────────────────────────────────────────────────────────────────────────
+
+    @EventHandler(priority = EventPriority.MONITOR)
     public void onClose(InventoryCloseEvent e) {
         if (!(e.getPlayer() instanceof Player p)) return;
         Inventory top = e.getView().getTopInventory();
         if (!(top.getHolder() instanceof AhHolder holder)) return;
 
         if (holder.tag() == GuiTag.CREATE_1) {
+            // If player closes without clicking Next, return any item still in the input slot
             ItemStack item = top.getItem(CreateListingGui.INPUT_SLOT);
-            if (item != null && item.getType() != Material.AIR) {
+            if (item != null && !item.getType().isAir()) {
                 top.setItem(CreateListingGui.INPUT_SLOT, null);
-                var leftovers = p.getInventory().addItem(item);
-                for (ItemStack left : leftovers.values()) p.getWorld().dropItemNaturally(p.getLocation(), left);
-                p.updateInventory();
+                giveOrDrop(p, item);
             }
+            // Also return any session item that may exist (e.g. force-closed)
+            plugin.getSessionManager().returnItem(p);
         }
+
+        if (holder.tag() == GuiTag.CREATE_2) {
+            // Session item is returned only if the listing was NOT confirmed
+            plugin.getSessionManager().returnItem(p);
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Helpers
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /** P0.5 – Returns true for all known dupe-vector click types. */
+    private boolean isDupeAction(InventoryClickEvent e) {
+        return switch (e.getClick()) {
+            case NUMBER_KEY, SWAP_OFFHAND, DOUBLE_CLICK, CREATIVE -> true;
+            default -> e.getAction() == InventoryAction.COLLECT_TO_CURSOR;
+        };
+    }
+
+    private boolean isShiftClick(InventoryClickEvent e) {
+        return e.getClick() == ClickType.SHIFT_LEFT || e.getClick() == ClickType.SHIFT_RIGHT;
+    }
+
+    private void giveOrDrop(Player p, ItemStack item) {
+        var leftovers = p.getInventory().addItem(item);
+        leftovers.values().forEach(l -> p.getWorld().dropItemNaturally(p.getLocation(), l));
+        p.updateInventory();
     }
 }
