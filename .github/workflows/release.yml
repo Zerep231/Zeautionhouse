@@ -1,0 +1,43 @@
+name: Build & Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build plugin JAR
+        run: mvn clean package -q
+
+      - name: Get tag name
+        id: tag
+        run: echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "ZeAuctionHouse ${{ steps.tag.outputs.TAG }}"
+          files: target/ZeAuctionHouse.jar
+          generate_release_notes: false
+          body: |
+            ## ⬇️ Cài đặt
+            Tải `ZeAuctionHouse.jar` bên dưới → bỏ vào `plugins/` → restart server.
+
+            **Yêu cầu:** Paper 1.21.1+, Java 21+
+            **Tùy chọn:** Geyser + Floodgate (hỗ trợ Bedrock/mobile)
