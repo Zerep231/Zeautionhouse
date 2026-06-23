@@ -13,7 +13,7 @@ import me.zerep.auctionhouse.listing.ListingService;
 import me.zerep.auctionhouse.session.SessionManager;
 import me.zerep.auctionhouse.shop.ShopService;
 import me.zerep.auctionhouse.transaction.TransactionManager;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import org.bukkit.ChatColor;
 import org.bukkit.plugin.java.JavaPlugin;
 
 /**
@@ -101,10 +101,10 @@ public class AuctionHousePlugin extends JavaPlugin {
     public ShopService        getShopService()        { return shopService; }
     public GuiManager         getGuiManager()         { return guiManager; }
 
-    /** Translate &-codes from config messages (P2.3 – legacy compat bridge). */
+    /** Translate &-codes → §-codes for p.sendMessage(String) on Paper 1.21+. */
+    @SuppressWarnings("deprecation")
     public String msg(String key) {
         String raw = getConfig().getString("messages." + key, "&cMissing: " + key);
-        return LegacyComponentSerializer.legacyAmpersand().serialize(
-                LegacyComponentSerializer.legacyAmpersand().deserialize(raw));
+        return ChatColor.translateAlternateColorCodes('&', raw);
     }
 }
