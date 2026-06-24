@@ -3,6 +3,7 @@ package dev.zerep.zeah.commands;
 import dev.zerep.zeah.ZeAuctionHouse;
 import dev.zerep.zeah.gui.MainAuctionGUI;
 import dev.zerep.zeah.gui.MainMenuGUI;
+import dev.zerep.zeah.gui.MyListingsGUI;
 import dev.zerep.zeah.gui.SellGUI;
 import dev.zerep.zeah.gui.ShopGUI;
 import org.bukkit.command.*;
@@ -29,7 +30,6 @@ public class AHCommand implements CommandExecutor, TabCompleter {
             player.sendMessage(plugin.getLang().format("no-permission")); return true;
         }
 
-        // /ah (no args) → main hub GUI
         if (args.length == 0) {
             new MainMenuGUI(plugin, player).open();
             return true;
@@ -52,8 +52,6 @@ public class AHCommand implements CommandExecutor, TabCompleter {
                 }
                 new SellGUI(plugin, player).open();
             }
-                new SellGUI(plugin, player).open();
-            }
 
             case "claim" -> {
                 if (!player.hasPermission("zeah.claim")) {
@@ -73,7 +71,7 @@ public class AHCommand implements CommandExecutor, TabCompleter {
             }
 
             case "mylistings", "my", "list" ->
-                new dev.zerep.zeah.gui.MyListingsGUI(plugin, player).open();
+                new MyListingsGUI(plugin, player).open();
 
             case "reload" -> {
                 if (!player.hasPermission("zeah.admin")) {
