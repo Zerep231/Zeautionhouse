@@ -77,6 +77,9 @@ public class GUIListener implements Listener {
         return plain.contains("Auction House") || plain.contains("My Listings")
             || plain.contains("Confirm") || plain.contains("Mailbox")
             || plain.contains("Builder Shop") || plain.contains("Nhà Đấu Giá")
-            || plain.contains("Hộp Thư") || plain.contains("Cửa Hàng");
+            || plain.contains("Hộp Thư") || plain.contains("Cửa Hàng")
+            || plain.contains("Sell Item") || plain.contains("Bán Vật Phẩm")
+            || plain.contains("Main Menu") || plain.contains("Menu Chính")
+            || plain.contains("AuctionHouse Menu");
     }
 }

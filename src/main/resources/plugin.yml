@@ -9,7 +9,7 @@ website: https://github.com/Zerep231/Zeautionhouse
 commands:
   ah:
     description: Main AuctionHouse command
-    usage: /ah [browse|sell <price>|claim|shop|mylistings|reload]
+    usage: /ah [browse|sell|claim|shop|mylistings|reload]
     aliases: [auctionhouse, auction]
 
 permissions:

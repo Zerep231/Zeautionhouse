@@ -15,7 +15,8 @@
 
 | Version | Status | Download |
 |---|---|---|
-| **v3.3.1** | ✅ Stable | [ZeAuctionHouse-3.3.1.jar](https://github.com/Zerep231/Zeautionhouse/releases/tag/v3.3.1) |
+| **v3.3.2** | ✅ Stable | [ZeAuctionHouse-3.3.2.jar](https://github.com/Zerep231/Zeautionhouse/releases/tag/v3.3.2) |
+| v3.3.1 | Superseded | [v3.3.1](https://github.com/Zerep231/Zeautionhouse/releases/tag/v3.3.1) |
 | v3.3.0 | Superseded | [Releases](https://github.com/Zerep231/Zeautionhouse/releases) |
 
 ---
@@ -41,7 +42,7 @@
 | Command | Permission | Description |
 |---|---|---|
 | `/ah` | `zeah.use` | Browse all listings |
-| `/ah sell <price>` | `zeah.sell` | List held item for sale |
+| `/ah sell` | `zeah.sell` | Open sell GUI (price via +/- buttons) |
 | `/ah claim` | `zeah.claim` | Collect items from mailbox |
 | `/ah shop` | `zeah.shop` | Open builder shop |
 | `/ah mylistings` | `zeah.use` | View & cancel your listings |
@@ -122,6 +123,29 @@ items:
 ---
 
 ## 📝 Update History
+
+
+### v3.3.2 — GUI Improvements & JAR Optimization
+
+**Sell GUI**
+- `/ah sell` now opens a full GUI (no longer requires price argument)
+- Price set with +/- buttons (±1, ±10, ±100) — 100% Geyser/Bedrock compatible
+- No Anvil GUI used, no chat input required
+
+**Main Menu**
+- `/ah` (no args) opens a hub GUI with all features accessible
+- Browse · Sell · My Listings · Claim · Builder Shop
+
+**JAR Size Reduction (~5–6 MB)**
+- Excluded SQLite native binaries for Mac, Windows, FreeBSD, 32-bit ARM
+- Kept: Linux x86\_64 and Linux aarch64 (covers all common server platforms)
+- MySQL: excluded bundled protobuf/Google libs
+- Updated Java compiler target: 17 → 21
+
+**Bug Fixes**
+- `GUIListener` now recognizes SellGUI and MainMenuGUI titles for click protection
+
+---
 
 ### v3.3.1 — Stabilization *(current)*
 
