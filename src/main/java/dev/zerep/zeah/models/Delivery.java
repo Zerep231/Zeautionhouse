@@ -4,7 +4,7 @@ import java.util.UUID;
 
 public class Delivery {
 
-    public enum Status { PENDING, CLAIMING, CLAIMED }
+    public enum Status { PENDING, CLAIMING, CLAIMED, FAILED }
 
     private final int id;
     private final UUID buyerUuid;
@@ -13,7 +13,7 @@ public class Delivery {
     private final byte[] itemData;
     private Status status;
     private final long createdAt;
-    private final String reason; // "purchase", "cancelled", "expired"
+    private final String reason;
 
     public Delivery(int id, UUID buyerUuid, String buyerName, int listingId,
                     byte[] itemData, Status status, long createdAt, String reason) {

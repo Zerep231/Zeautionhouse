@@ -3,6 +3,8 @@ package dev.zerep.zeah.database;
 import dev.zerep.zeah.models.Delivery;
 import dev.zerep.zeah.models.Listing;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -11,6 +13,9 @@ public interface DatabaseExecutor {
 
     void initialize() throws Exception;
     void close();
+
+    /** Raw connection from the pool — caller must close() it. */
+    Connection getConnection() throws SQLException;
 
     // Listings
     CompletableFuture<Integer> insertListing(UUID sellerUuid, String sellerName,
