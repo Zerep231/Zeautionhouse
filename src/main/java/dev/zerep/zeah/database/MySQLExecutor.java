@@ -368,6 +368,11 @@ public class MySQLExecutor implements DatabaseExecutor {
     }
 
     @Override
+    public Connection getConnection() throws SQLException {
+        return dataSource.getConnection();
+    }
+
+    @Override
     public void close() {
         pool.shutdown();
         if (dataSource != null) dataSource.close();

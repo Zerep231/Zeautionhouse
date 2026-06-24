@@ -442,6 +442,11 @@ public class SQLiteExecutor implements DatabaseExecutor {
     }
 
     @Override
+    public Connection getConnection() throws SQLException {
+        return dataSource.getConnection();
+    }
+
+    @Override
     public void close() {
         writer.shutdown();
         if (dataSource != null) dataSource.close();
