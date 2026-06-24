@@ -289,10 +289,23 @@ public class SQLiteExecutor implements DatabaseExecutor {
                     delivery.setString(1, buyerUuid.toString());
                     delivery.setString(2, buyerName);
                     delivery.setInt(3, listingId);
-                    delivery.setBytes(4, itemData);
+                    delivery.setBytes(4, buyerItemData);
                     delivery.setLong(5, Instant.now().getEpochSecond());
                     delivery.executeUpdate();
 
+                    // Seller currency deliveries — in same transaction (atomic, crash-safe)
+                    long sellerNow = Instant.now().getEpochSecond();
+                    PreparedStatement selDel = c.prepareStatement(
+                        "INSERT INTO deliveries(buyer_uuid,buyer_name,listing_id,item_data,status,reason,created_at) VALUES(?,?,?,?,'PENDING','sale_payment',?)");
+                    for (byte[] currencyStack : sellerCurrencyData) {
+                        selDel.setString(1, sellerUuid.toString());
+                        selDel.setString(2, sellerName);
+                        selDel.setInt(3, listingId);
+                        selDel.setBytes(4, currencyStack);
+                        selDel.setLong(5, sellerNow);
+                        selDel.addBatch();
+                    }
+                    selDel.executeBatch();
                     c.commit();
                     return true;
                 } catch (Exception e) {

@@ -266,19 +266,20 @@ public class MySQLExecutor implements DatabaseExecutor {
                     del.setBytes(4, buyerItemData);
                     del.setLong(5, Instant.now().getEpochSecond());
                     del.executeUpdate();
-                long sellerNow = java.time.Instant.now().getEpochSecond();
-                PreparedStatement selDel = c.prepareStatement(
-                    "INSERT INTO deliveries(buyer_uuid,buyer_name,listing_id,item_data,status,reason,created_at) VALUES(?,?,?,?,'PENDING','sale_payment',?)");
-                for (byte[] currencyStack : sellerCurrencyData) {
-                    selDel.setString(1, sellerUuid.toString());
-                    selDel.setString(2, sellerName);
-                    selDel.setInt(3, listingId);
-                    selDel.setBytes(4, currencyStack);
-                    selDel.setLong(5, sellerNow);
-                    selDel.addBatch();
-                }
-                selDel.executeBatch();
-                c.commit();
+                    // Seller currency deliveries — in same transaction (atomic, crash-safe)
+                    long sellerNow = Instant.now().getEpochSecond();
+                    PreparedStatement selDel = c.prepareStatement(
+                        "INSERT INTO deliveries(buyer_uuid,buyer_name,listing_id,item_data,status,reason,created_at) VALUES(?,?,?,?,'PENDING','sale_payment',?)");
+                    for (byte[] currencyStack : sellerCurrencyData) {
+                        selDel.setString(1, sellerUuid.toString());
+                        selDel.setString(2, sellerName);
+                        selDel.setInt(3, listingId);
+                        selDel.setBytes(4, currencyStack);
+                        selDel.setLong(5, sellerNow);
+                        selDel.addBatch();
+                    }
+                    selDel.executeBatch();
+                    c.commit();
                     return true;
                 } catch (Exception e) { c.rollback(); throw e; }
                 finally { c.setAutoCommit(true); }
