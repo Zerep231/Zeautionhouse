@@ -30,6 +30,9 @@ public interface DatabaseExecutor {
                                                int listingId, byte[] itemData, String reason);
     CompletableFuture<List<Delivery>> getPendingDeliveries(UUID buyerUuid);
     CompletableFuture<Boolean> claimDelivery(int deliveryId);
+    
+    /** Reverts a CLAIMED delivery back to PENDING. */
+    CompletableFuture<Void> undoClaim(int deliveryId);
     CompletableFuture<Integer> countPendingDeliveries(UUID buyerUuid);
 
     /**
