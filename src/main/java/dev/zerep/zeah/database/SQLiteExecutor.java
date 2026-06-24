@@ -247,6 +247,20 @@ public class SQLiteExecutor implements DatabaseExecutor {
     }
 
     @Override
+    public CompletableFuture<Void> undoClaim(int deliveryId) {
+        return CompletableFuture.runAsync(() -> {
+            try (Connection c = dataSource.getConnection();
+                 PreparedStatement ps = c.prepareStatement(
+                     "UPDATE deliveries SET status='PENDING' WHERE id=?")) {
+                ps.setInt(1, deliveryId);
+                ps.executeUpdate();
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }, writer);
+    }
+
+    @Override
     public CompletableFuture<Integer> countPendingDeliveries(UUID buyerUuid) {
         return CompletableFuture.supplyAsync(() -> {
             try (Connection c = dataSource.getConnection();
