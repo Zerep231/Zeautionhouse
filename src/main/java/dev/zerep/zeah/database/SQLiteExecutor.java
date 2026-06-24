@@ -40,8 +40,7 @@ public class SQLiteExecutor implements DatabaseExecutor {
         cfg.setJdbcUrl("jdbc:sqlite:" + dbFile.getAbsolutePath());
         cfg.setMaximumPoolSize(1); // SQLite: 1 connection
         cfg.setConnectionTimeout(30_000);
-        cfg.addDataSourceProperty("journal_mode", "WAL");
-        cfg.addDataSourceProperty("synchronous", "NORMAL");
+        cfg.setConnectionInitSql("PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL;");
         dataSource = new HikariDataSource(cfg);
         createTables();
     }
@@ -265,8 +264,8 @@ public class SQLiteExecutor implements DatabaseExecutor {
 
     @Override
     public CompletableFuture<Boolean> executePurchase(int listingId,
-                                                       UUID buyerUuid, String buyerName,
-                                                       byte[] itemData) {
+        UUID buyerUuid, String buyerName, byte[] buyerItemData,
+        UUID sellerUuid, String sellerName, byte[][] sellerCurrencyData) {
         return CompletableFuture.supplyAsync(() -> {
             try (Connection c = dataSource.getConnection()) {
                 c.setAutoCommit(false);

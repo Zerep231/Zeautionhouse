@@ -25,8 +25,11 @@ public class SessionManager {
         this.plugin = plugin;
         this.timeoutMs = plugin.getConfig().getInt("session.timeout-minutes", 5) * 60_000L;
         this.mysql = "mysql".equalsIgnoreCase(plugin.getConfig().getString("database.type", "sqlite"));
-        createDraftTable();
-        loadDraftListings();
+        // Run DB init async — do not block the main thread on startup
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            createDraftTable();
+            loadDraftListings();
+        });
     }
 
     // ── Draft persistence ──────────────────────────────────────────────────
@@ -61,7 +64,6 @@ public class SessionManager {
                 UUID uuid = UUID.fromString(rs.getString("player_uuid"));
                 byte[] data = rs.getBytes("item_data");
                 double price = rs.getDouble("price");
-                long createdAt = rs.getLong("created_at");
                 ItemStack item = ItemSerializer.deserialize(data);
                 if (item == null) continue;
                 CreateSession session = new CreateSession(uuid, item);
@@ -75,32 +77,38 @@ public class SessionManager {
         }
     }
 
+    /** Async draft save — never blocks main thread. */
     private void saveDraft(UUID uuid, CreateSession session) {
-        String sql = mysql
-            ? "INSERT INTO draft_listings (player_uuid,item_data,price,created_at) VALUES (?,?,?,?) " +
-              "ON DUPLICATE KEY UPDATE item_data=VALUES(item_data),price=VALUES(price)"
-            : "INSERT OR REPLACE INTO draft_listings (player_uuid,item_data,price,created_at) VALUES (?,?,?,?)";
-        try (Connection c = plugin.getDb().getConnection();
-             PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setString(1, uuid.toString());
-            ps.setBytes(2, ItemSerializer.serialize(session.getItem()));
-            ps.setDouble(3, session.getPrice());
-            ps.setLong(4, session.getCreatedAt());
-            ps.executeUpdate();
-        } catch (SQLException e) {
-            plugin.getLogger().warning("Failed to save draft: " + e.getMessage());
-        }
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            String sql = mysql
+                ? "INSERT INTO draft_listings (player_uuid,item_data,price,created_at) VALUES (?,?,?,?) " +
+                  "ON DUPLICATE KEY UPDATE item_data=VALUES(item_data),price=VALUES(price)"
+                : "INSERT OR REPLACE INTO draft_listings (player_uuid,item_data,price,created_at) VALUES (?,?,?,?)";
+            try (Connection c = plugin.getDb().getConnection();
+                 PreparedStatement ps = c.prepareStatement(sql)) {
+                ps.setString(1, uuid.toString());
+                ps.setBytes(2, ItemSerializer.serialize(session.getItem()));
+                ps.setDouble(3, session.getPrice());
+                ps.setLong(4, session.getCreatedAt());
+                ps.executeUpdate();
+            } catch (SQLException e) {
+                plugin.getLogger().warning("Failed to save draft: " + e.getMessage());
+            }
+        });
     }
 
+    /** Async draft delete — never blocks main thread. */
     private void deleteDraft(UUID uuid) {
-        try (Connection c = plugin.getDb().getConnection();
-             PreparedStatement ps = c.prepareStatement(
-                 "DELETE FROM draft_listings WHERE player_uuid = ?")) {
-            ps.setString(1, uuid.toString());
-            ps.executeUpdate();
-        } catch (SQLException e) {
-            plugin.getLogger().warning("Failed to delete draft: " + e.getMessage());
-        }
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            try (Connection c = plugin.getDb().getConnection();
+                 PreparedStatement ps = c.prepareStatement(
+                     "DELETE FROM draft_listings WHERE player_uuid = ?")) {
+                ps.setString(1, uuid.toString());
+                ps.executeUpdate();
+            } catch (SQLException e) {
+                plugin.getLogger().warning("Failed to delete draft: " + e.getMessage());
+            }
+        });
     }
 
     private void saveAll() {
@@ -123,7 +131,6 @@ public class SessionManager {
         });
     }
 
-    /** Create a new session. Returns false if player already has one. */
     public boolean createSession(Player player, ItemStack item) {
         if (sessions.containsKey(player.getUniqueId())) return false;
         CreateSession session = new CreateSession(player.getUniqueId(), item);
@@ -140,7 +147,6 @@ public class SessionManager {
         return sessions.containsKey(playerUuid);
     }
 
-    /** Abort session and optionally return item. */
     public void abortSession(UUID playerUuid, boolean returnItem) {
         CreateSession session = sessions.remove(playerUuid);
         if (session == null) return;
@@ -153,11 +159,8 @@ public class SessionManager {
                     player.getInventory().addItem(session.getItem());
                     player.sendMessage(plugin.getLang().format("auction.session-timeout"));
                 } else {
-                    plugin.getDb().insertDelivery(
-                        playerUuid, "unknown", -1,
-                        ItemSerializer.serialize(session.getItem()),
-                        "session-abort"
-                    );
+                    plugin.getDb().insertDelivery(playerUuid, "unknown", -1,
+                        ItemSerializer.serialize(session.getItem()), "session-abort");
                 }
             });
         }
@@ -168,14 +171,10 @@ public class SessionManager {
         deleteDraft(playerUuid);
     }
 
-    /** Called on PlayerQuitEvent. */
     public void onPlayerQuit(UUID playerUuid) {
-        if (sessions.containsKey(playerUuid)) {
-            abortSession(playerUuid, true);
-        }
+        if (sessions.containsKey(playerUuid)) abortSession(playerUuid, true);
     }
 
-    /** Called on plugin disable — persist sessions so they survive restarts. */
     public void shutdown() {
         if (timeoutTask != null) timeoutTask.cancel();
         saveAll();

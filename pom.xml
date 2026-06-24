@@ -6,7 +6,7 @@
 
     <groupId>dev.zerep</groupId>
     <artifactId>ZeAuctionHouse</artifactId>
-    <version>3.3.2</version>
+    <version>3.3.3</version>
     <packaging>jar</packaging>
 
     <name>ZeAuctionHouse</name>
@@ -78,7 +78,6 @@
                             <createDependencyReducedPom>false</createDependencyReducedPom>
                             <minimizeJar>true</minimizeJar>
                             <filters>
-                                <!-- Strip signing metadata -->
                                 <filter>
                                     <artifact>*:*</artifact>
                                     <excludes>
@@ -87,12 +86,6 @@
                                         <exclude>META-INF/*.RSA</exclude>
                                     </excludes>
                                 </filter>
-                                <!--
-                                  SQLite JDBC bundles native .so/.dylib/.dll for every OS.
-                                  Minecraft servers run on Linux — exclude Mac, Windows,
-                                  FreeBSD and 32-bit ARM to save ~5-6 MB.
-                                  Kept: Linux/x86_64, Linux/aarch64, Linux/arm64
-                                -->
                                 <filter>
                                     <artifact>org.xerial:sqlite-jdbc</artifact>
                                     <excludes>
@@ -109,7 +102,6 @@
                                         <exclude>org/sqlite/native/Linux/riscv64/**</exclude>
                                     </excludes>
                                 </filter>
-                                <!-- MySQL: exclude bundled protobuf/google libs (minimizeJar handles most) -->
                                 <filter>
                                     <artifact>mysql:mysql-connector-java</artifact>
                                     <excludes>

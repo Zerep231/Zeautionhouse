@@ -20,13 +20,12 @@ public class LangManager {
     }
 
     public void load(String langCode) {
-        // Load fallback (English) first
         InputStream enStream = plugin.getResource("lang/en.yml");
         if (enStream != null) {
-            fallback = YamlConfiguration.loadConfiguration(new InputStreamReader(enStream, StandardCharsets.UTF_8));
+            fallback = YamlConfiguration.loadConfiguration(
+                new InputStreamReader(enStream, StandardCharsets.UTF_8));
         }
 
-        // Save and load the configured lang file
         File langDir = new File(plugin.getDataFolder(), "lang");
         if (!langDir.exists()) langDir.mkdirs();
 
@@ -36,19 +35,16 @@ public class LangManager {
             if (res != null) {
                 plugin.saveResource("lang/" + langCode + ".yml", false);
             } else {
-                // Fallback to en
                 plugin.saveResource("lang/en.yml", false);
                 langFile = new File(langDir, "en.yml");
             }
         }
-
         lang = YamlConfiguration.loadConfiguration(langFile);
     }
 
+    /** Format with prefix, using consistent legacy color codes throughout. */
     public String get(String key) {
-        String prefix = getRaw("prefix");
-        String msg = getRaw(key);
-        return ColorUtil.strip(prefix).isEmpty() ? ColorUtil.color(msg).toString() : colored(prefix + msg);
+        return colored(getRaw("prefix") + getRaw(key));
     }
 
     public String getNoPrefix(String key) {
@@ -67,25 +63,23 @@ public class LangManager {
         return val != null ? val : List.of();
     }
 
-    public String colored(String text) {
-        return text.replace("&", "\u00a7");
-    }
-
-    /** Replace placeholders and colorize. */
+    /** Replace placeholders and colorize with prefix. */
     public String format(String key, Object... args) {
         String msg = getRaw("prefix") + getRaw(key);
-        // args come in pairs: placeholder, value
-        for (int i = 0; i + 1 < args.length; i += 2) {
+        for (int i = 0; i + 1 < args.length; i += 2)
             msg = msg.replace("{" + args[i] + "}", String.valueOf(args[i + 1]));
-        }
         return colored(msg);
     }
 
     public String formatNoPrefix(String key, Object... args) {
         String msg = getRaw(key);
-        for (int i = 0; i + 1 < args.length; i += 2) {
+        for (int i = 0; i + 1 < args.length; i += 2)
             msg = msg.replace("{" + args[i] + "}", String.valueOf(args[i + 1]));
-        }
         return colored(msg);
+    }
+
+    /** Legacy color code translation: & → § */
+    public String colored(String text) {
+        return text.replace("&", "\u00a7");
     }
 }

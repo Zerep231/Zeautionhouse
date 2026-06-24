@@ -27,7 +27,7 @@ public class ConfirmSellGUI extends AuctionGUI {
     public void open() {
         Bukkit.getScheduler().runTask(plugin, () -> {
             String title = plugin.getLang().getNoPrefix("gui.sell-confirm-title");
-            inventory = Bukkit.createInventory(null, 27, ColorUtil.color(title));
+            inventory = Bukkit.createInventory(new ZeAHHolder(), 27, ColorUtil.color(title));
             for (int i = 0; i < 27; i++) inventory.setItem(i, filler());
 
             try {

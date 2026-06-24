@@ -21,7 +21,7 @@ public class MainMenuGUI extends AuctionGUI {
 
     @Override
     public void open() {
-        inventory = Bukkit.createInventory(null, 36,
+        inventory = Bukkit.createInventory(new ZeAHHolder(), 36,
             ColorUtil.color(plugin.getLang().getNoPrefix("gui.main-menu.title")));
 
         for (int i = 0; i < 36; i++) inventory.setItem(i, filler());

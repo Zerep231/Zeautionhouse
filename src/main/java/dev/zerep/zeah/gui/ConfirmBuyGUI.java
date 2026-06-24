@@ -33,7 +33,7 @@ public class ConfirmBuyGUI extends AuctionGUI {
                     return;
                 }
                 String title = plugin.getLang().getNoPrefix("gui.confirm-title");
-                inventory = Bukkit.createInventory(null, 27, ColorUtil.color(title));
+                inventory = Bukkit.createInventory(new ZeAHHolder(), 27, ColorUtil.color(title));
 
                 // Fill with dark glass
                 for (int i = 0; i < 27; i++) inventory.setItem(i, filler());

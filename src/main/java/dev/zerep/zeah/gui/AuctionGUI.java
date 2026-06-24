@@ -4,6 +4,7 @@ import dev.zerep.zeah.ZeAuctionHouse;
 import dev.zerep.zeah.utils.ColorUtil;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
@@ -27,6 +28,14 @@ public abstract class AuctionGUI {
     protected AuctionGUI(ZeAuctionHouse plugin, Player player) {
         this.plugin = plugin;
         this.player = player;
+    }
+
+    /** Create an inventory tagged with ZeAHHolder so GUIListener can identify it reliably. */
+    protected org.bukkit.inventory.Inventory createInventory(int size, String title) {
+        return Bukkit.createInventory(new ZeAHHolder(), size, dev.zerep.zeah.utils.ColorUtil.color(title));
+    }
+    protected org.bukkit.inventory.Inventory createInventory(int size, net.kyori.adventure.text.Component title) {
+        return Bukkit.createInventory(new ZeAHHolder(), size, title);
     }
 
     public abstract void open();

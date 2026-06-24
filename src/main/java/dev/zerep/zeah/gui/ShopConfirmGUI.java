@@ -26,7 +26,7 @@ public class ShopConfirmGUI extends AuctionGUI {
 
     @Override
     public void open() {
-        inventory = Bukkit.createInventory(null, 27,
+        inventory = Bukkit.createInventory(new ZeAHHolder(), 27,
             net.kyori.adventure.text.Component.text(
                 plugin.getLang().getNoPrefix("gui.shop-confirm.title")));
         render();

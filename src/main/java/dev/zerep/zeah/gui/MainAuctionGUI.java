@@ -37,7 +37,7 @@ public class MainAuctionGUI extends AuctionGUI {
                 int totalPages = plugin.getCacheManager().getCache().getTotalPages(PAGE_SIZE);
                 String title = plugin.getLang().formatNoPrefix("gui.ah-title",
                     "page", page + 1, "total", Math.max(1, totalPages));
-                inventory = Bukkit.createInventory(null, 54, ColorUtil.color(title));
+                inventory = Bukkit.createInventory(new ZeAHHolder(), 54, ColorUtil.color(title));
                 slotToListingId.clear();
 
                 List<Listing> pageListing = plugin.getCacheManager().getCache().getPage(page, PAGE_SIZE);

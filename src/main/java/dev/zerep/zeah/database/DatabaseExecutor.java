@@ -32,10 +32,16 @@ public interface DatabaseExecutor {
     CompletableFuture<Boolean> claimDelivery(int deliveryId);
     CompletableFuture<Integer> countPendingDeliveries(UUID buyerUuid);
 
-    // Atomic purchase: mark listing SOLD + create delivery in one transaction
+    /**
+     * Atomic purchase transaction:
+     *   1. Mark listing SOLD
+     *   2. Create buyer item delivery
+     *   3. Create seller currency deliveries (each stack as one delivery row)
+     * All three in one DB transaction — crash-safe.
+     */
     CompletableFuture<Boolean> executePurchase(int listingId,
-                                               UUID buyerUuid, String buyerName,
-                                               byte[] itemData);
+                                               UUID buyerUuid, String buyerName, byte[] buyerItemData,
+                                               UUID sellerUuid, String sellerName, byte[][] sellerCurrencyData);
 
     // Atomic cancel: mark listing CANCELLED + create delivery back to seller
     CompletableFuture<Boolean> executeCancel(int listingId,

@@ -8,7 +8,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 public class DeliveryManager {
 
@@ -18,74 +19,88 @@ public class DeliveryManager {
         this.plugin = plugin;
     }
 
-    /** Claim all pending deliveries for a player. */
+    /**
+     * Claim all pending deliveries for a player.
+     * Fix: use CompletableFuture.allOf so the summary message fires AFTER
+     * all async DB claims resolve — no 10-tick timing guess.
+     */
     public void claimAll(Player player) {
         plugin.getDb().getPendingDeliveries(player.getUniqueId()).thenAccept(deliveries -> {
-            Bukkit.getScheduler().runTask(plugin, () -> {
-                if (deliveries.isEmpty()) {
-                    player.sendMessage(plugin.getLang().format("delivery.none")); return;
-                }
-                AtomicInteger claimed = new AtomicInteger(0);
-                AtomicInteger remaining = new AtomicInteger(0);
+            if (deliveries.isEmpty()) {
+                Bukkit.getScheduler().runTask(plugin, () ->
+                    player.sendMessage(plugin.getLang().format("delivery.none")));
+                return;
+            }
 
-                for (Delivery delivery : deliveries) {
-                    // Atomic claim (PENDING → CLAIMING → CLAIMED)
-                    plugin.getDb().claimDelivery(delivery.getId()).thenAccept(success -> {
-                        if (!success) return;
-                        Bukkit.getScheduler().runTask(plugin, () -> {
+            // Fire all claim DB calls concurrently, collect which item-data to give
+            List<CompletableFuture<byte[]>> futures = deliveries.stream()
+                .map(delivery -> plugin.getDb().claimDelivery(delivery.getId())
+                    .thenApply(success -> success ? delivery.getItemData() : null))
+                .collect(Collectors.toList());
+
+            // Give items and show summary ONLY after every future resolves
+            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
+                .thenRun(() -> {
+                    List<byte[]> claimed = futures.stream()
+                        .map(f -> f.getNow(null))
+                        .filter(d -> d != null)
+                        .collect(Collectors.toList());
+
+                    Bukkit.getScheduler().runTask(plugin, () -> {
+                        int given = 0, dropped = 0;
+                        for (byte[] data : claimed) {
                             try {
-                                ItemStack item = ItemSerializer.deserialize(delivery.getItemData());
-                                if (player.getInventory().firstEmpty() == -1) {
-                                    // Drop on ground as last resort
-                                    player.getWorld().dropItemNaturally(player.getLocation(), item);
-                                } else {
-                                    player.getInventory().addItem(item);
-                                }
-                                claimed.incrementAndGet();
+                                ItemStack item = ItemSerializer.deserialize(data);
+                                var overflow = player.getInventory().addItem(item);
+                                overflow.values().forEach(is ->
+                                    player.getWorld().dropItemNaturally(player.getLocation(), is));
+                                given++;
                             } catch (Exception e) {
                                 plugin.getLogger().severe("Failed to give item: " + e.getMessage());
-                                remaining.incrementAndGet();
+                                dropped++;
                             }
-                        });
+                        }
+                        if (given > 0)
+                            player.sendMessage(plugin.getLang().format("delivery.claimed-all", "count", given));
+                        if (dropped > 0)
+                            player.sendMessage(plugin.getLang().format("delivery.inventory-full", "remaining", dropped));
                     });
-                }
-
-                // Summary message after slight delay to let all async ops complete
-                Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                    if (claimed.get() > 0)
-                        player.sendMessage(plugin.getLang().format("delivery.claimed-all", "count", claimed.get()));
-                    if (remaining.get() > 0)
-                        player.sendMessage(plugin.getLang().format("delivery.inventory-full", "remaining", remaining.get()));
-                }, 10L);
-            });
+                });
         });
     }
 
-    /** Silently try to claim if player is online after a purchase/cancel. */
+    /** Silently claim all pending items for an online player. */
     public void tryClaimOnline(Player player) {
         plugin.getDb().getPendingDeliveries(player.getUniqueId()).thenAccept(deliveries -> {
             if (deliveries.isEmpty()) return;
-            Bukkit.getScheduler().runTask(plugin, () -> {
-                for (Delivery delivery : deliveries) {
-                    if (player.getInventory().firstEmpty() == -1) break;
-                    plugin.getDb().claimDelivery(delivery.getId()).thenAccept(success -> {
-                        if (!success) return;
-                        Bukkit.getScheduler().runTask(plugin, () -> {
+
+            List<CompletableFuture<byte[]>> futures = deliveries.stream()
+                .map(d -> plugin.getDb().claimDelivery(d.getId())
+                    .thenApply(ok -> ok ? d.getItemData() : null))
+                .collect(Collectors.toList());
+
+            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
+                .thenRun(() -> {
+                    List<byte[]> claimed = futures.stream()
+                        .map(f -> f.getNow(null)).filter(d -> d != null)
+                        .collect(Collectors.toList());
+
+                    Bukkit.getScheduler().runTask(plugin, () -> {
+                        for (byte[] data : claimed) {
                             try {
-                                ItemStack item = ItemSerializer.deserialize(delivery.getItemData());
-                                if (player.getInventory().firstEmpty() != -1) {
-                                    player.getInventory().addItem(item);
-                                }
+                                ItemStack item = ItemSerializer.deserialize(data);
+                                var overflow = player.getInventory().addItem(item);
+                                overflow.values().forEach(is ->
+                                    player.getWorld().dropItemNaturally(player.getLocation(), is));
                             } catch (Exception ignored) {}
-                        });
+                        }
+                        plugin.getDb().countPendingDeliveries(player.getUniqueId())
+                            .thenAccept(count -> {
+                                if (count > 0) Bukkit.getScheduler().runTask(plugin, () ->
+                                    player.sendMessage(plugin.getLang().format("delivery.claim-prompt", "count", count)));
+                            });
                     });
-                }
-                // Notify remaining
-                plugin.getDb().countPendingDeliveries(player.getUniqueId()).thenAccept(count -> {
-                    if (count > 0) Bukkit.getScheduler().runTask(plugin, () ->
-                        player.sendMessage(plugin.getLang().format("delivery.claim-prompt", "count", count)));
                 });
-            });
         });
     }
 

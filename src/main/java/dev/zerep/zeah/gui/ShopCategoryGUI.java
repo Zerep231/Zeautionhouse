@@ -31,7 +31,7 @@ public class ShopCategoryGUI extends AuctionGUI {
         int size = Math.min(rows * 9, 54);
 
         String title = plugin.getLang().formatNoPrefix("shop.category-title", "category", category.getName());
-        inventory = Bukkit.createInventory(null, size, ColorUtil.color(title));
+        inventory = Bukkit.createInventory(new ZeAHHolder(), size, ColorUtil.color(title));
 
         for (int i = 0; i < size; i++) inventory.setItem(i, filler());
         slotToItem.clear();

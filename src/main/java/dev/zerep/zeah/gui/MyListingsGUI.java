@@ -33,7 +33,7 @@ public class MyListingsGUI extends AuctionGUI {
                 String title = plugin.getLang().getNoPrefix("gui.my-listings-title");
                 int size = Math.max(27, (int)(Math.ceil((listings.size() + 9) / 9.0)) * 9);
                 size = Math.min(size, 54);
-                inventory = Bukkit.createInventory(null, size, ColorUtil.color(title));
+                inventory = Bukkit.createInventory(new ZeAHHolder(), size, ColorUtil.color(title));
 
                 for (int i = 0; i < size; i++) inventory.setItem(i, filler());
                 slotToId.clear();

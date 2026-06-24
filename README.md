@@ -15,7 +15,8 @@
 
 | Version | Status | Download |
 |---|---|---|
-| **v3.3.2** | ✅ Stable | [ZeAuctionHouse-3.3.2.jar](https://github.com/Zerep231/Zeautionhouse/releases/tag/v3.3.2) |
+| **v3.3.3** | ✅ Stable | [ZeAuctionHouse-3.3.3.jar](https://github.com/Zerep231/Zeautionhouse/releases/tag/v3.3.3) |
+| v3.3.2 | Superseded | [v3.3.2](https://github.com/Zerep231/Zeautionhouse/releases/tag/v3.3.2) | [ZeAuctionHouse-3.3.2.jar](https://github.com/Zerep231/Zeautionhouse/releases/tag/v3.3.2) |
 | v3.3.1 | Superseded | [v3.3.1](https://github.com/Zerep231/Zeautionhouse/releases/tag/v3.3.1) |
 | v3.3.0 | Superseded | [Releases](https://github.com/Zerep231/Zeautionhouse/releases) |
 
@@ -124,6 +125,34 @@ items:
 
 ## 📝 Update History
 
+
+### v3.3.3 — 12-Bug Fix Release
+
+**Critical fixes:**
+- **[#1] SellGUI**: Removed dead item-removal line (double setItemInMainHand → AIR)
+- **[#2] DeliveryManager**: Race condition fixed — summary message now uses `CompletableFuture.allOf` instead of a 10-tick guess; items and count are accurate
+- **[#3] AuctionManager**: Seller payment is now **inside the same DB transaction** as the purchase — no more "seller not paid after crash" window
+- **[#4] SessionManager**: All JDBC calls (`createDraftTable`, `loadDraftListings`, `saveDraft`, `deleteDraft`) are now async — no main-thread lag
+
+**Logic fixes:**
+- **[#5] GUIListener**: Uses `ZeAHHolder implements InventoryHolder` for reliable GUI detection — no more fragile title-string matching
+- **[#7] VanillaEconomy**: Removed unused/misleading `createCurrencyStack()` (singular); only `createCurrencyStacks()` (plural) remains
+- **[#8] ShopConfirmGUI / ShopQuantityGUI**: Fixed `Component.text()` → `ColorUtil.color()` so `&a`-style color codes parse correctly in titles
+- **[#9] LangManager**: `get()` now uses consistent legacy `§` color codes via `colored()` — mixed Adventure/legacy rendering resolved
+
+**Minor fixes:**
+- **[#10] AHCommand**: `/ah sell` no longer requires a price argument; opens SellGUI directly
+- **[#11] SQLiteExecutor**: WAL journal mode now set via `setConnectionInitSql("PRAGMA journal_mode=WAL; ...")` — HikariCP properly applies it
+- **[#12] AuditLogger**: Confirmed async (called only from `thenAccept` callbacks)
+
+**SellGUI redesign (user request):**
+- `/ah sell` opens a 54-slot GUI showing **player's full inventory**
+- Click any item to select it — no hand-holding, no held-item requirement
+- Price set via ±1 / ±10 / ±100 buttons
+- Selected item highlighted with enchant glint + ✔ label
+- Fully Geyser/Bedrock compatible (no Anvil GUI)
+
+---
 
 ### v3.3.2 — GUI Improvements & JAR Optimization
 

@@ -8,7 +8,6 @@ import org.bukkit.inventory.ItemStack;
 /**
  * Vanilla item-based economy — no Vault required.
  * The "currency" is a configurable physical item (default: DIAMOND).
- * Prices are integer quantities of that item.
  */
 public class VanillaEconomy {
 
@@ -28,12 +27,10 @@ public class VanillaEconomy {
         return plugin.getConfig().getString("economy.currency-name", "Diamond");
     }
 
-    /** Format a price for display, e.g. "10x Diamond" */
     public String format(int amount) {
         return String.format("%,dx %s", amount, getCurrencyName());
     }
 
-    /** Count how many currency items the player carries. */
     public int getBalance(Player player) {
         Material currency = getCurrencyMaterial();
         int count = 0;
@@ -47,10 +44,6 @@ public class VanillaEconomy {
         return getBalance(player) >= amount;
     }
 
-    /**
-     * Remove {@code amount} currency items from player's inventory.
-     * Returns true if successful, false if not enough items.
-     */
     public boolean withdraw(Player player, int amount) {
         if (!has(player, amount)) return false;
         Material currency = getCurrencyMaterial();
@@ -68,10 +61,6 @@ public class VanillaEconomy {
         return true;
     }
 
-    /**
-     * Give {@code amount} currency items directly to player's inventory.
-     * Overflow drops at feet.
-     */
     public void deposit(Player player, int amount) {
         Material currency = getCurrencyMaterial();
         int maxStack = currency.getMaxStackSize();
@@ -84,20 +73,7 @@ public class VanillaEconomy {
         }
     }
 
-    /**
-     * Create a serializable ItemStack of currency for use in the delivery system.
-     * Large amounts are split into max-stack chunks when giving later.
-     */
-    public ItemStack createCurrencyStack(int amount) {
-        Material currency = getCurrencyMaterial();
-        int clamped = Math.max(1, Math.min(amount, currency.getMaxStackSize() * 1728));
-        return new ItemStack(currency, Math.min(clamped, currency.getMaxStackSize()));
-    }
-
-    /**
-     * Create multiple stacks representing {@code amount} total currency items.
-     * Used when inserting payment deliveries for large amounts.
-     */
+    /** Create multiple stacks representing {@code amount} total currency items. */
     public ItemStack[] createCurrencyStacks(int amount) {
         Material currency = getCurrencyMaterial();
         int maxStack = currency.getMaxStackSize();

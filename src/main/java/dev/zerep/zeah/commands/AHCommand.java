@@ -52,6 +52,8 @@ public class AHCommand implements CommandExecutor, TabCompleter {
                 }
                 new SellGUI(plugin, player).open();
             }
+                new SellGUI(plugin, player).open();
+            }
 
             case "claim" -> {
                 if (!player.hasPermission("zeah.claim")) {
