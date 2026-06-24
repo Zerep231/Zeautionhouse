@@ -76,7 +76,7 @@
                         <goals><goal>shade</goal></goals>
                         <configuration>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
-                            <minimizeJar>true</minimizeJar>
+                            <minimizeJar>false</minimizeJar>
                             <filters>
                                 <filter>
                                     <artifact>*:*</artifact>
@@ -112,16 +112,8 @@
                             </filters>
                             <relocations>
                                 <relocation>
-                                    <pattern>org.sqlite</pattern>
-                                    <shadedPattern>dev.zerep.zeah.libs.sqlite</shadedPattern>
-                                </relocation>
-                                <relocation>
                                     <pattern>com.zaxxer.hikari</pattern>
                                     <shadedPattern>dev.zerep.zeah.libs.hikari</shadedPattern>
-                                </relocation>
-                                <relocation>
-                                    <pattern>com.mysql</pattern>
-                                    <shadedPattern>dev.zerep.zeah.libs.mysql</shadedPattern>
                                 </relocation>
                             </relocations>
                         </configuration>
