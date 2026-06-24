@@ -42,11 +42,18 @@ jobs:
           name: ZeAuctionHouse-${{ github.sha }}
           path: ./plugin-jar
 
+      - name: Extract version from JAR filename
+        id: get_version
+        run: |
+          JAR_FILE=$(ls ./plugin-jar/ZeAuctionHouse-*.jar | head -n 1)
+          VERSION=$(basename $JAR_FILE | sed -E 's/ZeAuctionHouse-(.*)\.jar/\1/')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: build-${{ github.run_number }}
-          name: Build #${{ github.run_number }}
+          tag_name: v${{ steps.get_version.outputs.version }}
+          name: ZeAuctionHouse v${{ steps.get_version.outputs.version }}
           files: ./plugin-jar/*.jar
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
