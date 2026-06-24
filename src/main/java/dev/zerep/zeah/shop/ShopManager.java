@@ -61,6 +61,18 @@ public class ShopManager {
         plugin.getLogger().info("Loaded " + categories.size() + " shop categories.");
     }
 
+    /** Find which category a ShopItem belongs to (for back-navigation in ShopQuantityGUI). */
+    public ShopCategory getCategoryByItem(ShopItem target) {
+        for (ShopCategory cat : categories) {
+            for (ShopItem si : cat.getItems()) {
+                if (si.getMaterial() == target.getMaterial() && si.getPrice() == target.getPrice()) {
+                    return cat;
+                }
+            }
+        }
+        return categories.isEmpty() ? null : categories.get(0);
+    }
+
     /** Purchase items from shop, paying with currency items. */
     public void purchase(Player player, ShopItem item, int amount) {
         int total = item.getTotalPriceInt(amount);
@@ -69,7 +81,6 @@ public class ShopManager {
                 "price", plugin.getEconomy().format(total)));
             return;
         }
-        // Give items first, then withdraw (inventory-safe order)
         int remaining = amount;
         while (remaining > 0) {
             int batch = Math.min(remaining, item.getMaterial().getMaxStackSize());
@@ -86,4 +97,8 @@ public class ShopManager {
     }
 
     public List<ShopCategory> getCategories() { return categories; }
+
+    public ShopCategory getCategory(String id) {
+        return categories.stream().filter(c -> c.getId().equals(id)).findFirst().orElse(null);
+    }
 }

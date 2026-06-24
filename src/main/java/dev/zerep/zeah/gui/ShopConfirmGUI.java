@@ -2,12 +2,12 @@ package dev.zerep.zeah.gui;
 
 import dev.zerep.zeah.ZeAuctionHouse;
 import dev.zerep.zeah.shop.ShopItem;
+import dev.zerep.zeah.utils.ColorUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
 
@@ -21,7 +21,7 @@ public class ShopConfirmGUI extends AuctionGUI {
         super(plugin, player);
         this.shopItem = shopItem;
         this.quantity = quantity;
-        this.totalPrice = (int) (shopItem.getPrice() * quantity);
+        this.totalPrice = shopItem.getPrice() * quantity;
     }
 
     @Override
@@ -38,44 +38,50 @@ public class ShopConfirmGUI extends AuctionGUI {
         inventory.clear();
         for (int i = 0; i < 27; i++) inventory.setItem(i, filler());
 
-        // Item preview
+        boolean canAfford = plugin.getEconomy().has(player, totalPrice);
+
         inventory.setItem(13, buildItem(shopItem.getMaterial(),
-            "&e" + quantity + "x " + dev.zerep.zeah.utils.ColorUtil.formatMaterial(shopItem.getMaterial().name()),
+            "&e" + quantity + "x " + ColorUtil.formatMaterial(shopItem.getMaterial().name()),
             List.of(
-                "&7Đơn giá: &e" + plugin.getEconomy().format((int) shopItem.getPrice()),
-                "&7Tổng: &a" + plugin.getEconomy().format(totalPrice),
+                "&7Unit price:    &6" + plugin.getEconomy().format(shopItem.getPrice()),
+                "&7Total:         &a" + plugin.getEconomy().format(totalPrice),
+                "&7Your balance:  " + (canAfford ? "&e" : "&c") + plugin.getEconomy().format(plugin.getEconomy().getBalance(player)),
                 "",
-                "&7Số dư: &e" + plugin.getEconomy().format(plugin.getEconomy().getBalance(player))
+                canAfford ? "&aYou can afford this!" : "&cNot enough " + plugin.getEconomy().getCurrencyName() + "!"
             )));
 
-        // Confirm
-        inventory.setItem(11, buildItem(Material.GREEN_CONCRETE, "&a&lXÁC NHẬN MUA",
-            List.of("&7Nhấn để mua &e" + quantity + "x " +
-                dev.zerep.zeah.utils.ColorUtil.formatMaterial(shopItem.getMaterial().name()))));
+        inventory.setItem(11, buildItem(canAfford ? Material.GREEN_CONCRETE : Material.GRAY_CONCRETE,
+            canAfford ? "&a&lConfirm Purchase" : "&7&lCannot Afford",
+            List.of("&7Pay " + plugin.getEconomy().format(totalPrice))));
 
-        // Cancel
-        inventory.setItem(15, buildItem(Material.RED_CONCRETE, "&c&lHỦY BỎ"));
-
-        // Back
-        inventory.setItem(18, buildItem(Material.ARROW, "&cQuay lại"));
+        inventory.setItem(15, buildItem(Material.RED_CONCRETE, "&c&lCancel"));
+        inventory.setItem(18, buildItem(Material.ARROW, "&cBack"));
     }
 
     @Override
     public void handleClick(int slot, ClickType click, InventoryClickEvent event) {
         event.setCancelled(true);
         switch (slot) {
-            case 11 -> doPurchase();
-            case 15, 18 -> {
+            case 11 -> {
+                if (!plugin.getEconomy().has(player, totalPrice)) {
+                    player.sendMessage(plugin.getLang().format("shop.not-enough-items",
+                        "price", plugin.getEconomy().format(totalPrice)));
+                    render();
+                    return;
+                }
+                player.closeInventory();
+                plugin.getGuiListener().unregisterGUI(player.getUniqueId());
+                plugin.getShopManager().purchase(player, shopItem, quantity);
+            }
+            case 15 -> {
+                player.closeInventory();
+                plugin.getGuiListener().unregisterGUI(player.getUniqueId());
+            }
+            case 18 -> {
                 player.closeInventory();
                 plugin.getGuiListener().unregisterGUI(player.getUniqueId());
                 new ShopQuantityGUI(plugin, player, shopItem).open();
             }
         }
-    }
-
-    private void doPurchase() {
-        player.closeInventory();
-        plugin.getGuiListener().unregisterGUI(player.getUniqueId());
-        plugin.getShopManager().purchase(player, shopItem, quantity);
     }
 }

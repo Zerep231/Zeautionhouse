@@ -2,6 +2,7 @@ package dev.zerep.zeah.gui;
 
 import dev.zerep.zeah.ZeAuctionHouse;
 import dev.zerep.zeah.shop.ShopItem;
+import dev.zerep.zeah.utils.ColorUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -34,36 +35,27 @@ public class ShopQuantityGUI extends AuctionGUI {
 
     private void render() {
         inventory.clear();
-
-        // Borders
         for (int i = 0; i < 27; i++) inventory.setItem(i, filler());
 
-        // Item display in centre
-        ItemStack display = new ItemStack(shopItem.getMaterial(),
-            Math.max(1, Math.min(quantity, shopItem.getMaterial().getMaxStackSize())));
-        inventory.setItem(13, buildItem(display.getType(),
-            "&e" + quantity + "x " + dev.zerep.zeah.utils.ColorUtil.formatMaterial(shopItem.getMaterial().name()),
+        inventory.setItem(13, buildItem(shopItem.getMaterial(),
+            "&e" + quantity + "x " + ColorUtil.formatMaterial(shopItem.getMaterial().name()),
             List.of(
-                "&7Đơn giá: &e" + plugin.getEconomy().format((int) shopItem.getPrice()),
-                "&7Tổng: &a" + plugin.getEconomy().format((int) (shopItem.getPrice() * quantity))
+                "&7Unit price: &6" + plugin.getEconomy().format(shopItem.getPrice()),
+                "&7Total:      &a" + plugin.getEconomy().format(shopItem.getPrice() * quantity),
+                "",
+                "&7Your balance: &e" + plugin.getEconomy().format(plugin.getEconomy().getBalance(player))
             )));
 
-        // Decrease buttons
         inventory.setItem(9,  buildItem(Material.RED_CONCRETE,    "&c-64"));
         inventory.setItem(10, buildItem(Material.ORANGE_CONCRETE, "&c-10"));
         inventory.setItem(11, buildItem(Material.YELLOW_CONCRETE, "&c-1"));
+        inventory.setItem(15, buildItem(Material.LIME_CONCRETE,   "&a+1"));
+        inventory.setItem(16, buildItem(Material.CYAN_CONCRETE,   "&a+10"));
+        inventory.setItem(17, buildItem(Material.BLUE_CONCRETE,   "&a+64"));
 
-        // Increase buttons
-        inventory.setItem(15, buildItem(Material.LIME_CONCRETE,  "&a+1"));
-        inventory.setItem(16, buildItem(Material.CYAN_CONCRETE,  "&a+10"));
-        inventory.setItem(17, buildItem(Material.BLUE_CONCRETE,  "&a+64"));
-
-        // Confirm
-        inventory.setItem(22, buildItem(Material.EMERALD, "&a&lXÁC NHẬN",
-            List.of("&7Tổng: &e" + plugin.getEconomy().format((int) (shopItem.getPrice() * quantity)))));
-
-        // Back
-        inventory.setItem(18, buildItem(Material.ARROW, "&cQuay lại"));
+        inventory.setItem(22, buildItem(Material.EMERALD, "&a&lConfirm",
+            List.of("&7Total: &e" + plugin.getEconomy().format(shopItem.getPrice() * quantity))));
+        inventory.setItem(18, buildItem(Material.ARROW, "&cBack"));
     }
 
     @Override
@@ -84,7 +76,8 @@ public class ShopQuantityGUI extends AuctionGUI {
             case 18 -> {
                 player.closeInventory();
                 plugin.getGuiListener().unregisterGUI(player.getUniqueId());
-                new ShopCategoryGUI(plugin, player).open();
+                new ShopCategoryGUI(plugin, player,
+                    plugin.getShopManager().getCategoryByItem(shopItem)).open();
             }
         }
     }

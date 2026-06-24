@@ -38,13 +38,12 @@ public class ShopCategoryGUI extends AuctionGUI {
 
         for (int i = 0; i < Math.min(items.size(), size - 9); i++) {
             ShopItem si = items.get(i);
-            inventory.setItem(i, buildItem(si.getMaterial(), "&f" + ColorUtil.formatMaterial(si.getMaterial().name()),
+            inventory.setItem(i, buildItem(si.getMaterial(),
+                "&f" + ColorUtil.formatMaterial(si.getMaterial().name()),
                 List.of(
                     "&7Price: &6" + plugin.getEconomy().format(si.getPrice()) + " &7each",
                     "",
-                    "&eLeft-click &7— buy &f1",
-                    "&eShift-left &7— buy &f16",
-                    "&eRight-click &7— buy &f64"
+                    "&eClick &7to select quantity"
                 )));
             slotToItem.put(i, si);
         }
@@ -62,17 +61,17 @@ public class ShopCategoryGUI extends AuctionGUI {
         event.setCancelled(true);
         int navSlot = inventory.getSize() - 5;
         if (slot == navSlot) { player.closeInventory(); return; }
-        if (slot == navSlot - 2) { player.closeInventory(); new ShopGUI(plugin, player).open(); return; }
+        if (slot == navSlot - 2) {
+            player.closeInventory();
+            plugin.getGuiListener().unregisterGUI(player.getUniqueId());
+            new ShopGUI(plugin, player).open();
+            return;
+        }
 
         if (!slotToItem.containsKey(slot)) return;
         ShopItem si = slotToItem.get(slot);
-
-        int amount = switch (clickType) {
-            case SHIFT_LEFT -> 16;
-            case RIGHT -> 64;
-            default -> 1;
-        };
-
-        plugin.getShopManager().purchase(player, si, amount);
+        player.closeInventory();
+        plugin.getGuiListener().unregisterGUI(player.getUniqueId());
+        new ShopQuantityGUI(plugin, player, si).open();
     }
 }

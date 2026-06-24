@@ -50,6 +50,8 @@ public class MyListingsGUI extends AuctionGUI {
                                 .replace("{price}", plugin.getEconomy().format((int) listing.getPrice()))
                                 .replace("{expires}", listing.getFormattedExpiry())));
                         }
+                        lore.add(Component.empty());
+                        lore.add(ColorUtil.color("&cRight-click &7to cancel listing"));
                         meta.lore(lore);
                         display.setItemMeta(meta);
                         inventory.setItem(i, display);
@@ -71,12 +73,20 @@ public class MyListingsGUI extends AuctionGUI {
     public void handleClick(int slot, ClickType clickType, InventoryClickEvent event) {
         event.setCancelled(true);
         int navSlot = inventory.getSize() - 5;
-        if (slot == navSlot) { player.closeInventory(); new MainAuctionGUI(plugin, player, 0).open(); return; }
+        if (slot == navSlot) {
+            player.closeInventory();
+            new MainAuctionGUI(plugin, player, 0).open();
+            return;
+        }
 
-        if (slotToId.containsKey(slot)) {
+        if (!slotToId.containsKey(slot)) return;
+
+        // Right-click only to cancel — prevent accidental cancellation
+        if (clickType == ClickType.RIGHT || clickType == ClickType.SHIFT_RIGHT) {
             int listingId = slotToId.get(slot);
             player.closeInventory();
             plugin.getAuctionManager().cancelListing(player, listingId);
         }
+        // Left-click: do nothing (no accidental cancel)
     }
 }
