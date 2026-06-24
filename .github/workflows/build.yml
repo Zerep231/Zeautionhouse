@@ -1,4 +1,4 @@
-name: Build
+name: Build and Deploy
 
 on:
   push:
@@ -19,7 +19,7 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      - name: Build with Maven
+      - name: Build and Test with Maven
         run: mvn clean package -q
 
       - name: Upload JAR artifact
@@ -28,3 +28,25 @@ jobs:
           name: ZeAuctionHouse-${{ github.sha }}
           path: target/ZeAuctionHouse-*.jar
           retention-days: 30
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    steps:
+      - name: Download JAR artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ZeAuctionHouse-${{ github.sha }}
+          path: ./plugin-jar
+
+      - name: Deploy to Minecraft Server via SFTP
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: ${{ secrets.SERVER_PORT }}
+          source: "./plugin-jar/ZeAuctionHouse-*.jar"
+          target: "/path/to/minecraft/server/plugins"
+          strip_components: 1
