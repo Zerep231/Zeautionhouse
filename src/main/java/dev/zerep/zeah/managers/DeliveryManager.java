@@ -133,13 +133,4 @@ public class DeliveryManager {
                 player.sendMessage(plugin.getLang().format("delivery.claim-prompt", "count", count)));
         });
     }
-
-    private static class ClaimResult {
-        public final int id;
-        public final byte[] data;
-        public ClaimResult(int id, byte[] data) {
-            this.id = id;
-            this.data = data;
-        }
-    }
 }
