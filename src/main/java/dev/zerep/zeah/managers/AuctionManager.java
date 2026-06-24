@@ -46,6 +46,9 @@ public class AuctionManager {
 
     /** Complete sell after confirmation GUI. */
     public void completeSell(Player player, CreateSession session) {
+        if (session.getState() == CreateSession.State.CONFIRMED || session.getState() == CreateSession.State.COMPLETED) {
+            return;
+        }
         session.confirm();
         int price = (int) session.getPrice();
         ItemStack item = session.getItem();
@@ -90,6 +93,9 @@ public class AuctionManager {
                 if (listing.getSellerUuid().equals(player.getUniqueId())) {
                     player.sendMessage(plugin.getLang().format("auction.own-listing")); return;
                 }
+                
+                // Set listing status locally to prevent spam clicking
+                listing.setStatus(Listing.Status.SOLD);
 
                 int price = (int) listing.getPrice();
                 int balance = plugin.getEconomy().getBalance(player);
