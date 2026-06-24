@@ -6,7 +6,6 @@ import dev.zerep.zeah.models.Listing;
 import dev.zerep.zeah.session.CreateSession;
 import dev.zerep.zeah.utils.ColorUtil;
 import dev.zerep.zeah.utils.ItemSerializer;
-import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -47,7 +46,7 @@ public class AuctionManager {
     }
 
     /** Begin sell flow: validate item, session, limits. */
-    public void startSell(Player player, double price) {
+    public void startSell(Player player, int price) {
         if (!player.hasPermission("zeah.sell")) {
             player.sendMessage(plugin.getLang().format("no-permission")); return;
         }
@@ -62,13 +61,20 @@ public class AuctionManager {
             player.sendMessage(plugin.getLang().format("auction.blacklisted")); return;
         }
         // Price limits
-        double minPrice = plugin.getConfig().getDouble("limits.min-price", 1.0);
-        double maxPrice = plugin.getConfig().getDouble("limits.max-price", 999999.0);
+        int minPrice = plugin.getConfig().getInt("limits.min-price", 1);
+        int maxPrice = plugin.getConfig().getInt("limits.max-price", 9999);
         if (price < minPrice) {
-            player.sendMessage(plugin.getLang().format("auction.price-too-low", "min", ColorUtil.formatPrice(minPrice))); return;
+            player.sendMessage(plugin.getLang().format("auction.price-too-low",
+                "min", plugin.getEconomy().format(minPrice))); return;
         }
         if (price > maxPrice) {
-            player.sendMessage(plugin.getLang().format("auction.price-too-high", "max", ColorUtil.formatPrice(maxPrice))); return;
+            player.sendMessage(plugin.getLang().format("auction.price-too-high",
+                "max", plugin.getEconomy().format(maxPrice))); return;
+        }
+        // Currency item cannot be sold
+        if (held.getType() == plugin.getEconomy().getCurrencyMaterial()
+                && !player.hasPermission("zeah.bypass.blacklist")) {
+            player.sendMessage(plugin.getLang().format("auction.blacklisted")); return;
         }
         // Session check
         if (plugin.getSessionManager().hasSession(player.getUniqueId())) {
@@ -85,7 +91,6 @@ public class AuctionManager {
                 return;
             }
             Bukkit.getScheduler().runTask(plugin, () -> {
-                // Create session and open confirm GUI
                 ItemStack item = held.clone();
                 if (!plugin.getSessionManager().createSession(player, item)) {
                     player.sendMessage(plugin.getLang().format("auction.session-active")); return;
@@ -101,19 +106,10 @@ public class AuctionManager {
     /** Complete sell after confirmation GUI. */
     public void completeSell(Player player, CreateSession session) {
         session.confirm();
-        double price = session.getPrice();
+        int price = (int) session.getPrice();
         ItemStack item = session.getItem();
 
-        // Remove item from inventory
         player.getInventory().setItemInMainHand(new ItemStack(Material.AIR));
-
-        // Charge listing fee
-        double feePercent = plugin.getConfig().getDouble("limits.listing-fee-percent", 0.0);
-        if (feePercent > 0 && plugin.getEconomy() != null) {
-            double fee = price * feePercent / 100.0;
-            plugin.getEconomy().withdrawPlayer(player, fee);
-            player.sendMessage(plugin.getLang().format("auction.listing-fee", "fee", ColorUtil.formatPrice(fee)));
-        }
 
         int days = plugin.getConfig().getInt("expire.default-days", 7);
         long expireAt = Instant.now().getEpochSecond() + (days * 86400L);
@@ -127,20 +123,20 @@ public class AuctionManager {
                 Bukkit.getScheduler().runTask(plugin, () ->
                     player.sendMessage(plugin.getLang().format("auction.item-listed",
                         "item", ColorUtil.formatMaterial(item.getType().name()),
-                        "price", ColorUtil.formatPrice(price),
+                        "price", plugin.getEconomy().format(price),
                         "days", days)));
                 plugin.getAuditLogger().log("SELL", player.getUniqueId(),
-                    player.getName() + " listed " + item.getType() + " for " + price);
+                    player.getName() + " listed " + item.getType() + " for " + price
+                        + "x " + plugin.getEconomy().getCurrencyName());
             }).exceptionally(ex -> {
                 plugin.getLogger().severe("Failed to insert listing: " + ex.getMessage());
-                // Return item
                 Bukkit.getScheduler().runTask(plugin, () -> player.getInventory().addItem(item));
                 plugin.getSessionManager().removeSession(player.getUniqueId());
                 return null;
             });
     }
 
-    /** Execute purchase with full transaction safety. */
+    /** Execute purchase — buyer pays with items, seller receives via delivery. */
     public void purchase(Player player, int listingId) {
         plugin.getDb().getListingById(listingId).thenAccept(listing -> {
             Bukkit.getScheduler().runTask(plugin, () -> {
@@ -150,66 +146,86 @@ public class AuctionManager {
                 if (listing.getSellerUuid().equals(player.getUniqueId())) {
                     player.sendMessage(plugin.getLang().format("auction.own-listing")); return;
                 }
-                double price = listing.getPrice();
-                if (plugin.getEconomy() == null || !plugin.getEconomy().has(player, price)) {
-                    player.sendMessage(plugin.getLang().format("auction.not-enough-money",
-                        "price", ColorUtil.formatPrice(price),
-                        "balance", ColorUtil.formatPrice(plugin.getEconomy() != null
-                            ? plugin.getEconomy().getBalance(player) : 0))); return;
-                }
-                // Deduct currency immediately (will be reversed on failure)
-                EconomyResponse withdraw = plugin.getEconomy().withdrawPlayer(player, price);
-                if (!withdraw.transactionSuccess()) {
-                    player.sendMessage(plugin.getLang().format("auction.not-enough-money",
-                        "price", ColorUtil.formatPrice(price), "balance", ColorUtil.formatPrice(withdraw.balance)));
+
+                int price = (int) listing.getPrice();
+                int balance = plugin.getEconomy().getBalance(player);
+
+                if (balance < price) {
+                    player.sendMessage(plugin.getLang().format("auction.not-enough-items",
+                        "price", plugin.getEconomy().format(price),
+                        "balance", plugin.getEconomy().format(balance)));
                     return;
                 }
-                // Atomic purchase in DB
+
+                // Deduct currency items from buyer immediately
+                if (!plugin.getEconomy().withdraw(player, price)) {
+                    player.sendMessage(plugin.getLang().format("auction.not-enough-items",
+                        "price", plugin.getEconomy().format(price),
+                        "balance", plugin.getEconomy().format(plugin.getEconomy().getBalance(player))));
+                    return;
+                }
+
+                // Atomic DB: mark listing SOLD + create buyer delivery
                 plugin.getDb().executePurchase(listingId, player.getUniqueId(), player.getName(), listing.getItemData())
                     .thenAccept(success -> {
                         if (!success) {
-                            // Refund - listing was gone
+                            // Listing gone — refund items to buyer
                             Bukkit.getScheduler().runTask(plugin, () -> {
-                                plugin.getEconomy().depositPlayer(player, price);
+                                plugin.getEconomy().deposit(player, price);
                                 player.sendMessage(plugin.getLang().format("auction.listing-not-found"));
                             });
                             return;
                         }
-                        // Pay seller
+
+                        // Pay seller: directly if online, via delivery if offline
                         UUID sellerUuid = listing.getSellerUuid();
-                        plugin.getEconomy().depositPlayer(
-                            Bukkit.getOfflinePlayer(sellerUuid), price);
+                        paymentToSeller(sellerUuid, listing.getSellerName(), listingId, price);
 
                         plugin.getCacheManager().invalidate();
 
-                        // Notify
                         Bukkit.getScheduler().runTask(plugin, () -> {
                             player.sendMessage(plugin.getLang().format("auction.purchase-success",
-                                "item", ColorUtil.formatMaterial(listing.getItemData().length > 0
-                                    ? tryGetName(listing) : "item"),
-                                "price", ColorUtil.formatPrice(price)));
-                            Player seller = Bukkit.getPlayer(sellerUuid);
-                            if (seller != null) {
-                                seller.sendMessage(plugin.getLang().format("auction.seller-sold",
-                                    "item", tryGetName(listing),
-                                    "price", ColorUtil.formatPrice(price),
-                                    "net", ColorUtil.formatPrice(price)));
-                            }
-                            // Notify to claim
+                                "item", tryGetName(listing),
+                                "price", plugin.getEconomy().format(price)));
+                            // Notify to claim purchased item
                             plugin.getDb().countPendingDeliveries(player.getUniqueId()).thenAccept(count ->
                                 Bukkit.getScheduler().runTask(plugin, () ->
                                     player.sendMessage(plugin.getLang().format("delivery.claim-prompt", "count", count))));
                         });
+
                         plugin.getAuditLogger().log("BUY", player.getUniqueId(),
-                            player.getName() + " bought listing #" + listingId + " for " + price);
+                            player.getName() + " bought listing #" + listingId
+                                + " for " + price + "x " + plugin.getEconomy().getCurrencyName());
                     }).exceptionally(ex -> {
                         plugin.getLogger().severe("Purchase failed: " + ex.getMessage());
-                        Bukkit.getScheduler().runTask(plugin, () ->
-                            plugin.getEconomy().depositPlayer(player, price));
+                        // Refund buyer
+                        Bukkit.getScheduler().runTask(plugin, () -> plugin.getEconomy().deposit(player, price));
                         return null;
                     });
             });
         });
+    }
+
+    /**
+     * Pay the seller: give currency items directly if online,
+     * otherwise queue a delivery they can /ah claim later.
+     */
+    private void paymentToSeller(UUID sellerUuid, String sellerName, int listingId, int amount) {
+        Player sellerOnline = Bukkit.getPlayer(sellerUuid);
+        if (sellerOnline != null && sellerOnline.isOnline()) {
+            Bukkit.getScheduler().runTask(plugin, () -> {
+                plugin.getEconomy().deposit(sellerOnline, amount);
+                sellerOnline.sendMessage(plugin.getLang().format("auction.seller-sold",
+                    "price", plugin.getEconomy().format(amount)));
+            });
+        } else {
+            // Insert currency items as a delivery for the offline seller
+            ItemStack[] stacks = plugin.getEconomy().createCurrencyStacks(amount);
+            for (ItemStack stack : stacks) {
+                byte[] data = dev.zerep.zeah.utils.ItemSerializer.serialize(stack);
+                plugin.getDb().insertDelivery(sellerUuid, sellerName, listingId, data, "sale_payment");
+            }
+        }
     }
 
     /** Cancel a listing — atomic cancel + delivery back to seller. */

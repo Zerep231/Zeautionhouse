@@ -1,4 +1,5 @@
 # ZeAuctionHouse – English Messages
+# Placeholders: {item}, {price}, {balance}, {currency}, {seller}, {days}, {count}, {min}, {max}, {amount}, {fee}, {net}
 prefix: "&8[&6ZeAH&8] &r"
 
 no-permission: "&cYou don't have permission."
@@ -11,34 +12,33 @@ auction:
   browse-open: "&7Opening auction house..."
   no-listings: "&7No active listings found."
   item-listed: "&aListed &e{item} &afor &6{price}&a! Expires in &e{days} &adays."
-  listing-fee: "&eA listing fee of &6{fee} &ewas charged."
-  hold-item: "&cHold an item in your main hand to sell it."
-  blacklisted: "&cThat item is blacklisted and cannot be sold."
-  max-listings: "&cYou already have &e{current}&c/&e{max} &clistings."
+  hold-item: "&cHold the item you want to sell in your main hand."
+  blacklisted: "&cThat item cannot be sold here."
+  max-listings: "&cYou already have &e{current}&c/&e{max} &cactive listings."
   price-too-low: "&cMinimum price is &e{min}&c."
   price-too-high: "&cMaximum price is &e{max}&c."
   session-active: "&cYou already have an active sell session."
   session-timeout: "&cYour listing session timed out. Item returned."
   listing-not-found: "&cListing not found or already sold."
   own-listing: "&cYou cannot buy your own listing."
-  not-enough-money: "&cYou need &6{price} &cbut have &6{balance}&c."
+  not-enough-items: "&cYou need &6{price} &cbut only have &6{balance}&c."
   purchase-success: "&aYou bought &e{item} &afor &6{price}&a!"
-  seller-sold: "&aYour &e{item} &asold for &6{price}&a! &7(+{net} after fees)"
-  cancelled: "&aListing cancelled. Item will be delivered to your mailbox."
+  seller-sold: "&aYour item sold for &6{price}&a! Payment delivered."
+  cancelled: "&aListing cancelled. Item will be returned to your mailbox."
   expired: "&7Your listing for &e{item} &7expired. Item returned to mailbox."
 
 delivery:
   none: "&7You have no items to claim."
   claimed-all: "&aClaimed &e{count} &aitem(s)!"
-  inventory-full: "&cInventory full. &e{remaining} &citems saved for later."
+  inventory-full: "&cInventory full. &e{remaining} &citem(s) saved for later."
   claim-prompt: "&eYou have &6{count} &eunclaimed item(s). Use &6/ah claim&e."
 
 shop:
   title: "&8&lBuilder Shop"
   category-title: "&8{category}"
-  not-enabled: "&cThe builder shop is not enabled."
+  not-enabled: "&cThe builder shop is disabled."
   purchase-success: "&aBought &e{amount}x {item} &afor &6{price}&a!"
-  not-enough-money: "&cYou need &6{price}&c."
+  not-enough-items: "&cYou need &6{price}&c."
 
 gui:
   ah-title: "&8Auction House &7— Page {page}/{total}"
@@ -47,7 +47,7 @@ gui:
   sell-confirm-title: "&8Confirm Listing"
   delivery-title: "&8Mailbox &7({count} items)"
   next-page: "&eNext Page »"
-  prev-page: "&e« Previous Page"
+  prev-page: "&e« Prev Page"
   close: "&cClose"
   confirm-yes: "&aConfirm"
   confirm-no: "&cCancel"
@@ -62,7 +62,6 @@ gui:
     - ""
     - "&7Price: &6{price}"
     - "&7Expires: &e{expires}"
-    - "&7Bids: &fNone (fixed price)"
     - ""
     - "&cLeft-click &7to cancel"
   confirm-buy-lore:
@@ -76,8 +75,6 @@ gui:
     - ""
     - "&7Item: &f{item}"
     - "&7Price: &6{price}"
-    - "&7Fee: &e{fee}"
-    - "&7You receive: &a{net}"
     - ""
     - "&aClick to confirm listing"
   filler: "&8"

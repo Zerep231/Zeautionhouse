@@ -3,7 +3,6 @@ package dev.zerep.zeah.gui;
 import dev.zerep.zeah.ZeAuctionHouse;
 import dev.zerep.zeah.session.CreateSession;
 import dev.zerep.zeah.utils.ColorUtil;
-import dev.zerep.zeah.utils.ItemSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -31,13 +30,10 @@ public class ConfirmSellGUI extends AuctionGUI {
             inventory = Bukkit.createInventory(null, 27, ColorUtil.color(title));
             for (int i = 0; i < 27; i++) inventory.setItem(i, filler());
 
-            // Preview item
             try {
                 ItemStack preview = session.getItem().clone();
                 ItemMeta meta = preview.getItemMeta();
-                double feePercent = plugin.getConfig().getDouble("limits.listing-fee-percent", 0.0);
-                double fee = session.getPrice() * feePercent / 100.0;
-                double net = session.getPrice() - fee;
+                int price = (int) session.getPrice();
                 String itemName = meta.hasDisplayName()
                     ? ColorUtil.strip(meta.displayName().toString())
                     : ColorUtil.formatMaterial(preview.getType().name());
@@ -46,9 +42,7 @@ public class ConfirmSellGUI extends AuctionGUI {
                 for (String line : plugin.getLang().getList("gui.confirm-sell-lore")) {
                     lore.add(ColorUtil.color(line
                         .replace("{item}", itemName)
-                        .replace("{price}", ColorUtil.formatPrice(session.getPrice()))
-                        .replace("{fee}", ColorUtil.formatPrice(fee))
-                        .replace("{net}", ColorUtil.formatPrice(net))));
+                        .replace("{price}", plugin.getEconomy().format(price))));
                 }
                 meta.lore(lore);
                 preview.setItemMeta(meta);

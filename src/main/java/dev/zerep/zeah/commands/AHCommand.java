@@ -46,9 +46,9 @@ public class AHCommand implements CommandExecutor, TabCompleter {
                 if (args.length < 2) {
                     player.sendMessage(plugin.getLang().format("auction.usage")); return true;
                 }
-                double price;
+                int price;
                 try {
-                    price = Double.parseDouble(args[1]);
+                    price = Integer.parseInt(args[1]);
                     if (price <= 0) throw new NumberFormatException();
                 } catch (NumberFormatException e) {
                     player.sendMessage(plugin.getLang().format("invalid-number", "input", args[1])); return true;

@@ -47,7 +47,7 @@ public class MyListingsGUI extends AuctionGUI {
                         lore.add(Component.empty());
                         for (String line : plugin.getLang().getList("gui.my-listing-lore")) {
                             lore.add(ColorUtil.color(line
-                                .replace("{price}", ColorUtil.formatPrice(listing.getPrice()))
+                                .replace("{price}", plugin.getEconomy().format((int) listing.getPrice()))
                                 .replace("{expires}", listing.getFormattedExpiry())));
                         }
                         meta.lore(lore);

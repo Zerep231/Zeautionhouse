@@ -2,17 +2,14 @@ name: ZeAuctionHouse
 version: '${project.version}'
 main: dev.zerep.zeah.ZeAuctionHouse
 api-version: '1.21'
-description: Stable, secure, scalable AuctionHouse for Paper 1.21.1+
+description: Item-economy auction house for Paper 1.21.1+ — no Vault required
 authors: [Zerep231]
 website: https://github.com/Zerep231/Zeautionhouse
-
-softdepend:
-  - Vault
 
 commands:
   ah:
     description: Main AuctionHouse command
-    usage: /ah [browse|sell|claim|shop|mylistings|reload]
+    usage: /ah [browse|sell <price>|claim|shop|mylistings|reload]
     aliases: [auctionhouse, auction]
 
 permissions:
@@ -20,7 +17,7 @@ permissions:
     description: Use the auction house
     default: true
   zeah.sell:
-    description: Sell items
+    description: List items for sale
     default: true
   zeah.claim:
     description: Claim delivered items
@@ -29,11 +26,11 @@ permissions:
     description: Use the builder shop
     default: true
   zeah.admin:
-    description: Admin commands (reload, forceexpire, etc.)
+    description: Admin commands (reload, etc.)
     default: op
   zeah.bypass.limit:
     description: Bypass max listing limit
     default: op
   zeah.bypass.blacklist:
-    description: Bypass item blacklist
+    description: Sell blacklisted items
     default: op

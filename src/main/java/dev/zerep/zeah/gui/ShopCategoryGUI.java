@@ -40,7 +40,7 @@ public class ShopCategoryGUI extends AuctionGUI {
             ShopItem si = items.get(i);
             inventory.setItem(i, buildItem(si.getMaterial(), "&f" + ColorUtil.formatMaterial(si.getMaterial().name()),
                 List.of(
-                    "&7Price: &6" + ColorUtil.formatPrice(si.getPrice()) + " &7each",
+                    "&7Price: &6" + plugin.getEconomy().format(si.getPrice()) + " &7each",
                     "",
                     "&eLeft-click &7— buy &f1",
                     "&eShift-left &7— buy &f16",

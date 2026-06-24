@@ -30,7 +30,6 @@ public class ShopManager {
         for (String id : categoryIds) {
             File file = new File(shopDir, id + ".yml");
             if (!file.exists()) {
-                // Save from resources
                 InputStream in = plugin.getResource("shop/" + id + ".yml");
                 if (in != null) plugin.saveResource("shop/" + id + ".yml", false);
                 else continue;
@@ -48,9 +47,13 @@ public class ShopManager {
             List<ShopItem> items = new ArrayList<>();
             for (var entry : cfg.getMapList("items")) {
                 String mat = String.valueOf(entry.get("material"));
-                double price = entry.containsKey("price") ? Double.parseDouble(String.valueOf(entry.get("price"))) : 1.0;
+                int price = entry.containsKey("price")
+                    ? (int) Double.parseDouble(String.valueOf(entry.get("price"))) : 1;
                 try {
-                    items.add(new ShopItem(Material.valueOf(mat.toUpperCase()), price));
+                    Material material = Material.valueOf(mat.toUpperCase());
+                    if (material != plugin.getEconomy().getCurrencyMaterial()) {
+                        items.add(new ShopItem(material, price));
+                    }
                 } catch (IllegalArgumentException ignored) {}
             }
             categories.add(new ShopCategory(id, name, icon, items));
@@ -58,30 +61,28 @@ public class ShopManager {
         plugin.getLogger().info("Loaded " + categories.size() + " shop categories.");
     }
 
+    /** Purchase items from shop, paying with currency items. */
     public void purchase(Player player, ShopItem item, int amount) {
-        double total = item.getTotalPrice(amount);
+        int total = item.getTotalPriceInt(amount);
         if (!plugin.getEconomy().has(player, total)) {
-            player.sendMessage(plugin.getLang().format("shop.not-enough-money",
-                "price", ColorUtil.formatPrice(total)));
+            player.sendMessage(plugin.getLang().format("shop.not-enough-items",
+                "price", plugin.getEconomy().format(total)));
             return;
         }
-        // Give items
+        // Give items first, then withdraw (inventory-safe order)
         int remaining = amount;
         while (remaining > 0) {
             int batch = Math.min(remaining, item.getMaterial().getMaxStackSize());
             ItemStack give = new ItemStack(item.getMaterial(), batch);
-            if (player.getInventory().firstEmpty() == -1) {
-                player.getWorld().dropItemNaturally(player.getLocation(), give);
-            } else {
-                player.getInventory().addItem(give);
-            }
+            var overflow = player.getInventory().addItem(give);
+            overflow.values().forEach(is -> player.getWorld().dropItemNaturally(player.getLocation(), is));
             remaining -= batch;
         }
-        plugin.getEconomy().withdrawPlayer(player, total);
+        plugin.getEconomy().withdraw(player, total);
         player.sendMessage(plugin.getLang().format("shop.purchase-success",
             "amount", amount,
             "item", ColorUtil.formatMaterial(item.getMaterial().name()),
-            "price", ColorUtil.formatPrice(total)));
+            "price", plugin.getEconomy().format(total)));
     }
 
     public List<ShopCategory> getCategories() { return categories; }

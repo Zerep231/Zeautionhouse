@@ -1,4 +1,5 @@
 # ZeAuctionHouse – Tiếng Việt
+# Placeholders: {item}, {price}, {balance}, {currency}, {seller}, {days}, {count}, {min}, {max}, {amount}, {fee}, {net}
 prefix: "&8[&6ZeAH&8] &r"
 
 no-permission: "&cBạn không có quyền thực hiện điều này."
@@ -11,19 +12,18 @@ auction:
   browse-open: "&7Đang mở nhà đấu giá..."
   no-listings: "&7Không có mặt hàng nào đang được bán."
   item-listed: "&aBạn đã đăng &e{item} &avới giá &6{price}&a! Hết hạn sau &e{days} &angày."
-  listing-fee: "&ePhí đăng bán: &6{fee}&e đã được trừ."
   hold-item: "&cHãy cầm vật phẩm muốn bán trên tay."
-  blacklisted: "&cVật phẩm này bị cấm bán."
-  max-listings: "&cBạn đã có &e{current}&c/&e{max} &ctin đăng."
+  blacklisted: "&cVật phẩm này không thể bán tại đây."
+  max-listings: "&cBạn đã có &e{current}&c/&e{max} &ctin đăng đang hoạt động."
   price-too-low: "&cGiá tối thiểu là &e{min}&c."
   price-too-high: "&cGiá tối đa là &e{max}&c."
   session-active: "&cBạn đã có phiên đăng bán đang diễn ra."
   session-timeout: "&cPhiên đăng bán đã hết giờ. Vật phẩm được trả lại."
   listing-not-found: "&cKhông tìm thấy tin đăng hoặc đã bán."
   own-listing: "&cBạn không thể mua hàng của chính mình."
-  not-enough-money: "&cBạn cần &6{price} &cnhưng chỉ có &6{balance}&c."
+  not-enough-items: "&cBạn cần &6{price} &cnhưng chỉ có &6{balance}&c."
   purchase-success: "&aBạn đã mua &e{item} &avới giá &6{price}&a!"
-  seller-sold: "&aVật phẩm &e{item} &acủa bạn đã bán với giá &6{price}&a! &7(+{net} sau phí)"
+  seller-sold: "&aVật phẩm của bạn đã bán với giá &6{price}&a! Thanh toán đã được gửi."
   cancelled: "&aĐã hủy tin đăng. Vật phẩm sẽ được gửi vào hộp thư."
   expired: "&7Tin đăng &e{item} &7đã hết hạn. Vật phẩm được trả về hộp thư."
 
@@ -38,7 +38,7 @@ shop:
   category-title: "&8{category}"
   not-enabled: "&cCửa hàng chưa được bật."
   purchase-success: "&aMua &e{amount}x {item} &avới giá &6{price}&a!"
-  not-enough-money: "&cBạn cần &6{price}&c."
+  not-enough-items: "&cBạn cần &6{price}&c."
 
 gui:
   ah-title: "&8Nhà Đấu Giá &7— Trang {page}/{total}"
@@ -75,8 +75,6 @@ gui:
     - ""
     - "&7Vật phẩm: &f{item}"
     - "&7Giá: &6{price}"
-    - "&7Phí: &e{fee}"
-    - "&7Bạn nhận: &a{net}"
     - ""
     - "&aClick để xác nhận"
   filler: "&8"

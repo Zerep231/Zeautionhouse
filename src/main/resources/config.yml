@@ -1,7 +1,18 @@
-# ZeAuctionHouse V3.3 Configuration
+# ============================================================
+#  ZeAuctionHouse V3.3  –  Configuration
+#  https://github.com/Zerep231/Zeautionhouse
+# ============================================================
 
+# ── Economy ──────────────────────────────────────────────────
+# No Vault required. Prices are counted in physical items.
+economy:
+  currency-item: DIAMOND          # Vanilla item used as currency
+  currency-name: Diamond          # Display name shown in messages
+
+# ── Database ─────────────────────────────────────────────────
 database:
-  type: sqlite   # sqlite or mysql
+  type: sqlite      # sqlite | mysql
+  # MySQL options (ignored when type: sqlite)
   host: localhost
   port: 3306
   database: zeauctionhouse
@@ -9,27 +20,33 @@ database:
   password: ''
   pool-size: 10
 
+# ── Cache ────────────────────────────────────────────────────
 cache:
-  ttl-seconds: 10
+  ttl-seconds: 10   # How long listing pages are cached
 
+# ── Session ──────────────────────────────────────────────────
 session:
-  timeout-minutes: 5
+  timeout-minutes: 5  # Abort inactive sell sessions & return item
 
+# ── Listing Limits ───────────────────────────────────────────
 limits:
   max-listings-per-player: 10
   max-total-listings: 1000
-  max-price: 999999.0
-  min-price: 1.0
-  listing-fee-percent: 0.0   # 0 = disabled
+  max-price: 9999    # Max price in currency items
+  min-price: 1       # Min price in currency items
 
+# ── Expiry ───────────────────────────────────────────────────
 expire:
   check-interval-minutes: 10
-  default-days: 7
+  default-days: 7    # Listings expire after this many days
 
+# ── Audit Logging ────────────────────────────────────────────
 log:
   enabled: true
-  rotation-days: 30
+  rotation-days: 30  # Delete log files older than this
 
+# ── Item Blacklist ───────────────────────────────────────────
+# Items that cannot be listed (use Material names)
 blacklist:
   - BEDROCK
   - COMMAND_BLOCK
@@ -39,8 +56,10 @@ blacklist:
   - DEBUG_STICK
   - KNOWLEDGE_BOOK
 
+# ── Builder Shop ─────────────────────────────────────────────
 shop:
   enabled: true
+  # Each category has its own file in plugins/ZeAuctionHouse/shop/
   categories:
     - stone
     - wood
@@ -50,4 +69,5 @@ shop:
     - nether
     - end
 
-lang: en
+# ── Language ─────────────────────────────────────────────────
+lang: en    # en | vi  (files in plugins/ZeAuctionHouse/lang/)

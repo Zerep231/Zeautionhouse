@@ -4,14 +4,14 @@ import org.bukkit.Material;
 
 public class ShopItem {
     private final Material material;
-    private final double price;
+    private final int price;
 
-    public ShopItem(Material material, double price) {
+    public ShopItem(Material material, int price) {
         this.material = material;
         this.price = price;
     }
 
     public Material getMaterial() { return material; }
-    public double getPrice() { return price; }
-    public double getTotalPrice(int amount) { return price * amount; }
+    public int getPrice() { return price; }
+    public int getTotalPriceInt(int amount) { return price * amount; }
 }

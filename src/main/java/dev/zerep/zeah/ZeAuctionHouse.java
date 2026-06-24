@@ -4,6 +4,7 @@ import dev.zerep.zeah.commands.AHCommand;
 import dev.zerep.zeah.database.DatabaseExecutor;
 import dev.zerep.zeah.database.MySQLExecutor;
 import dev.zerep.zeah.database.SQLiteExecutor;
+import dev.zerep.zeah.economy.VanillaEconomy;
 import dev.zerep.zeah.lang.LangManager;
 import dev.zerep.zeah.listeners.GUIListener;
 import dev.zerep.zeah.listeners.PlayerListener;
@@ -13,8 +14,6 @@ import dev.zerep.zeah.managers.CacheManager;
 import dev.zerep.zeah.managers.DeliveryManager;
 import dev.zerep.zeah.session.SessionManager;
 import dev.zerep.zeah.shop.ShopManager;
-import net.milkbowl.vault.economy.Economy;
-import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class ZeAuctionHouse extends JavaPlugin {
@@ -23,6 +22,7 @@ public final class ZeAuctionHouse extends JavaPlugin {
 
     private DatabaseExecutor db;
     private LangManager lang;
+    private VanillaEconomy economy;
     private CacheManager cacheManager;
     private SessionManager sessionManager;
     private AuctionManager auctionManager;
@@ -30,23 +30,17 @@ public final class ZeAuctionHouse extends JavaPlugin {
     private ShopManager shopManager;
     private AuditLogger auditLogger;
     private GUIListener guiListener;
-    private Economy economy;
 
     @Override
     public void onEnable() {
         instance = this;
         saveDefaultConfig();
 
-        // Language
         lang = new LangManager(this);
         lang.load(getConfig().getString("lang", "en"));
 
-        // Economy (Vault)
-        if (!setupEconomy()) {
-            getLogger().severe("Vault/Economy not found! Economy features disabled.");
-        }
+        economy = new VanillaEconomy(this);
 
-        // Database
         try {
             String type = getConfig().getString("database.type", "sqlite");
             if ("mysql".equalsIgnoreCase(type)) {
@@ -61,7 +55,6 @@ public final class ZeAuctionHouse extends JavaPlugin {
             return;
         }
 
-        // Managers
         auditLogger = new AuditLogger(this);
         cacheManager = new CacheManager(this);
         sessionManager = new SessionManager(this);
@@ -70,21 +63,19 @@ public final class ZeAuctionHouse extends JavaPlugin {
         shopManager = new ShopManager(this);
         shopManager.load();
 
-        // Start background tasks
         sessionManager.startTimeoutTask();
         auctionManager.startExpireTask();
 
-        // Listeners
         guiListener = new GUIListener(this);
         getServer().getPluginManager().registerEvents(guiListener, this);
         getServer().getPluginManager().registerEvents(new PlayerListener(this), this);
 
-        // Commands
         AHCommand ahCmd = new AHCommand(this);
         var cmd = getCommand("ah");
         if (cmd != null) { cmd.setExecutor(ahCmd); cmd.setTabCompleter(ahCmd); }
 
-        getLogger().info("ZeAuctionHouse v" + getDescription().getVersion() + " enabled!");
+        getLogger().info("ZeAuctionHouse v" + getDescription().getVersion() + " enabled! "
+            + "Currency: " + economy.getCurrencyName());
     }
 
     @Override
@@ -98,21 +89,15 @@ public final class ZeAuctionHouse extends JavaPlugin {
     public void reload() {
         reloadConfig();
         lang.load(getConfig().getString("lang", "en"));
+        economy = new VanillaEconomy(this);
         shopManager.load();
         cacheManager.invalidate();
-    }
-
-    private boolean setupEconomy() {
-        if (getServer().getPluginManager().getPlugin("Vault") == null) return false;
-        RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
-        if (rsp == null) return false;
-        economy = rsp.getProvider();
-        return economy != null;
     }
 
     public static ZeAuctionHouse getInstance() { return instance; }
     public DatabaseExecutor getDb() { return db; }
     public LangManager getLang() { return lang; }
+    public VanillaEconomy getEconomy() { return economy; }
     public CacheManager getCacheManager() { return cacheManager; }
     public SessionManager getSessionManager() { return sessionManager; }
     public AuctionManager getAuctionManager() { return auctionManager; }
@@ -120,5 +105,4 @@ public final class ZeAuctionHouse extends JavaPlugin {
     public ShopManager getShopManager() { return shopManager; }
     public AuditLogger getAuditLogger() { return auditLogger; }
     public GUIListener getGuiListener() { return guiListener; }
-    public Economy getEconomy() { return economy; }
 }

@@ -50,7 +50,7 @@ public class ConfirmBuyGUI extends AuctionGUI {
                     for (String line : loreTpl) {
                         lore.add(ColorUtil.color(line
                             .replace("{item}", itemName)
-                            .replace("{price}", ColorUtil.formatPrice(listing.getPrice()))
+                            .replace("{price}", plugin.getEconomy().format((int) listing.getPrice()))
                             .replace("{seller}", listing.getSellerName())));
                     }
                     meta.lore(lore);
@@ -61,7 +61,7 @@ public class ConfirmBuyGUI extends AuctionGUI {
                 // YES button (green)
                 inventory.setItem(11, buildItem(Material.LIME_STAINED_GLASS_PANE,
                     plugin.getLang().getNoPrefix("gui.confirm-yes"),
-                    List.of("&7Cost: &6" + ColorUtil.formatPrice(listing.getPrice()))));
+                    List.of("&7Cost: &6" + plugin.getEconomy().format((int) listing.getPrice()))));
 
                 // NO button (red)
                 inventory.setItem(15, buildItem(Material.RED_STAINED_GLASS_PANE,
