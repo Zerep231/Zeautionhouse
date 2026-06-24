@@ -23,6 +23,7 @@ jobs:
           cache: maven
 
       - name: Build plugin JAR
+        working-directory: AuctionHouse
         run: mvn clean package -q
 
       - name: Get tag name
@@ -33,11 +34,14 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           name: "ZeAuctionHouse ${{ steps.tag.outputs.TAG }}"
-          files: target/ZeAuctionHouse.jar
+          files: AuctionHouse/target/ZeAuctionHouse-*.jar
           generate_release_notes: false
           body: |
             ## ⬇️ Cài đặt
-            Tải `ZeAuctionHouse.jar` bên dưới → bỏ vào `plugins/` → restart server.
+            Tải `ZeAuctionHouse-*.jar` bên dưới → bỏ vào `plugins/` → restart server.
 
             **Yêu cầu:** Paper 1.21.1+, Java 21+
             **Tùy chọn:** Geyser + Floodgate (hỗ trợ Bedrock/mobile)
+
+            ---
+            Xem chi tiết thay đổi tại [README – Update History](https://github.com/Zerep231/Zeautionhouse#-update-history)

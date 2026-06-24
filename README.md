@@ -1,67 +1,186 @@
 # ZeAuctionHouse
 
-A lightweight auction house plugin for **Paper 1.21.1+** — no Vault, no virtual currency.
+[![Release](https://img.shields.io/github/v/release/Zerep231/Zeautionhouse?label=release&color=brightgreen)](https://github.com/Zerep231/Zeautionhouse/releases/latest)
+[![Build](https://img.shields.io/github/actions/workflow/status/Zerep231/Zeautionhouse/build.yml?branch=main&label=build)](https://github.com/Zerep231/Zeautionhouse/actions/workflows/build.yml)
+[![Paper](https://img.shields.io/badge/Paper-1.21.1%2B-orange)](https://papermc.io)
+[![Java](https://img.shields.io/badge/Java-21%2B-blue)](https://adoptium.net)
+[![License](https://img.shields.io/badge/license-MIT-lightgrey)](LICENSE)
 
-Players trade using real in-game items (Diamonds, Emeralds, etc.).
-
----
-
-## Key Features
-
-- **No Vault required** — economy runs on physical items, no plugins to depend on
-- **Marketplace** — list, browse, buy, and cancel item listings via clean GUI
-- **Builder Shop** — buy building materials (stone, wood, glass, plants, deco, nether, end) with quantity selector
-- **Delivery Box** — items are stored safely; no item loss if inventory is full
-- **Session persistence** — sell sessions survive server restarts and crashes
-- **SQLite & MySQL** — choose your database; HikariCP connection pooling included
-- **Multi-language** — English and Vietnamese built-in (`lang: en` or `lang: vi`)
-- **Bedrock-friendly** — GUI works with Geyser/Floodgate players
-- **Audit logging** — every transaction is logged to file and database
+> Lightweight auction house plugin for Paper 1.21.1+ — **no Vault, no virtual currency.**
+> Players trade with real in-game items (Diamonds, Emeralds, etc.).
 
 ---
 
-## Commands
+## ⬇️ Download
+
+| Version | Status | Download |
+|---|---|---|
+| **v3.3.1** | ✅ Stable | [ZeAuctionHouse-3.3.1.jar](https://github.com/Zerep231/Zeautionhouse/releases/tag/v3.3.1) |
+| v3.3.0 | Superseded | [Releases](https://github.com/Zerep231/Zeautionhouse/releases) |
+
+---
+
+## ✨ Key Features
+
+| Feature | Description |
+|---|---|
+| 💎 **No Vault** | Economy based on physical items — no dependency plugins needed |
+| 🏪 **Marketplace** | List, browse, buy, and cancel item listings via GUI |
+| 🪨 **Builder Shop** | Buy building materials per category (stone, wood, glass, plants, deco, nether, end) with quantity selector |
+| 📦 **Delivery Box** | Items held safely in mailbox — no item loss if inventory full |
+| 💾 **Session Persistence** | Sell sessions saved to DB — survive server crashes and restarts |
+| 🗄️ **SQLite & MySQL** | Choose your database with HikariCP connection pooling |
+| 🌐 **Multi-language** | English and Vietnamese built-in |
+| 📱 **Bedrock-friendly** | GUI compatible with Geyser/Floodgate |
+| 📋 **Audit Logging** | Every transaction logged to file and database |
+
+---
+
+## 🎮 Commands
 
 | Command | Permission | Description |
 |---|---|---|
-| `/ah` | `zeah.use` | Browse listings |
+| `/ah` | `zeah.use` | Browse all listings |
 | `/ah sell <price>` | `zeah.sell` | List held item for sale |
 | `/ah claim` | `zeah.claim` | Collect items from mailbox |
 | `/ah shop` | `zeah.shop` | Open builder shop |
-| `/ah mylistings` | `zeah.use` | View/cancel your listings |
+| `/ah mylistings` | `zeah.use` | View & cancel your listings |
 | `/ah reload` | `zeah.admin` | Reload config & shop files |
+
+**Aliases:** `/auctionhouse`, `/auction`
 
 ---
 
-## Requirements
+## 🔑 Permissions
 
-- Paper 1.21.1+
-- Java 17+
+| Permission | Default | Description |
+|---|---|---|
+| `zeah.use` | `true` | Browse and use auction house |
+| `zeah.sell` | `true` | List items for sale |
+| `zeah.claim` | `true` | Claim delivered items |
+| `zeah.shop` | `true` | Use builder shop |
+| `zeah.admin` | `op` | Reload config |
+| `zeah.bypass.limit` | `op` | Bypass max listing count |
+| `zeah.bypass.blacklist` | `op` | Sell blacklisted items |
 
-## Installation
+---
 
-1. Drop `ZeAuctionHouse-x.x.x.jar` into `plugins/`
-2. Restart server
-3. Edit `plugins/ZeAuctionHouse/config.yml`
+## ⚙️ Installation
 
-## Quick Config
+**Requirements:** Paper 1.21.1+ · Java 21+
+
+1. Download `ZeAuctionHouse-x.x.x.jar` from [Releases](https://github.com/Zerep231/Zeautionhouse/releases)
+2. Drop the JAR into your server's `plugins/` folder
+3. Restart the server
+4. Configure `plugins/ZeAuctionHouse/config.yml`
+
+### Quick Config
 
 ```yaml
 economy:
-  currency-item: DIAMOND
-  currency-name: Diamond
+  currency-item: DIAMOND   # Material name — item used as currency
+  currency-name: Diamond   # Display name shown in GUI/messages
 
 database:
-  type: sqlite   # or mysql
+  type: sqlite             # sqlite | mysql
+  # MySQL options (only needed when type: mysql):
+  host: localhost
+  port: 3306
+  database: zeauctionhouse
+  user: root
+  password: ''
+  pool-size: 10
 
-lang: en         # or vi
+lang: en                   # en | vi
+
+limits:
+  max-listings-per-player: 10
+  max-price: 9999
+  min-price: 1
+
+expire:
+  default-days: 7
 ```
 
 ---
 
-## Version History
+## 📦 Builder Shop
 
-| Version | Notes |
+Each shop category is a separate YAML file in `plugins/ZeAuctionHouse/shop/`.  
+Default categories: `stone`, `wood`, `glass`, `plants`, `decoration`, `nether`, `end`
+
+```yaml
+# plugins/ZeAuctionHouse/shop/stone.yml
+name: "Stone"
+icon: STONE
+items:
+  - { material: STONE,      price: 1 }
+  - { material: COBBLESTONE, price: 1 }
+  - { material: DEEPSLATE,  price: 2 }
+```
+
+---
+
+## 📝 Update History
+
+### v3.3.1 — Stabilization *(current)*
+
+> Focus: bug fixes and GUI improvements only. No new features.
+
+**Bug Fixes**
+- `ShopCategoryGUI` now correctly opens `ShopQuantityGUI` (quantity selector) — previously bought directly without quantity selection
+- `MyListingsGUI` now requires **right-click** to cancel a listing — prevents accidental cancellation from left-click
+- `ShopConfirmGUI` checks if player can afford items before confirming; shows balance and affordability status
+- `ShopQuantityGUI` back-navigation properly returns to the correct shop category
+
+**Infrastructure**
+- Added `getCategoryByItem()` to `ShopManager` for GUI back-navigation
+- `SessionManager` now persists draft sell sessions to `draft_listings` DB table — sessions survive restarts
+- Added `Delivery.Status.FAILED` to delivery state machine for crash-safe claiming
+- Added `getConnection()` to `DatabaseExecutor` interface, implemented in both `SQLiteExecutor` and `MySQLExecutor`
+- Removed 28 duplicate files from old `me.zerep.auctionhouse` package — significant JAR size reduction
+
+---
+
+### v3.3.0 — Initial Stable Release
+
+- Marketplace: list, browse, buy, cancel listings via GUI
+- Builder Shop with per-category YAML files
+- Delivery Box (mailbox) for safe item delivery
+- SQLite + MySQL support with HikariCP pooling
+- Session management for sell flow
+- Item blacklist, listing limits, expiry system
+- Audit logging (file + database)
+- English and Vietnamese language support
+- `/ah reload` admin command
+- Bedrock/Geyser-compatible GUI
+
+---
+
+## 🛣️ Roadmap
+
+| Version | Feature |
 |---|---|
-| v3.3.1 | Bug fixes: session DB persistence, shop GUI quantity flow, delivery FAILED status, removed duplicate package |
-| v3.3.0 | Initial stable release |
+| v4.0 | Buy Orders |
+| v4.1 | Item Exchange (trade offers) |
+| v4.2 | Discord integration |
+| Future | Public REST API |
+
+---
+
+## 🏗️ Building from Source
+
+```bash
+git clone https://github.com/Zerep231/Zeautionhouse.git
+cd Zeautionhouse/AuctionHouse
+mvn clean package
+# Output: target/ZeAuctionHouse-x.x.x.jar
+```
+
+**Requires:** Java 21+, Maven 3.8+
+
+---
+
+## 📄 License
+
+MIT © [Zerep231](https://github.com/Zerep231)
