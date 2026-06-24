@@ -43,7 +43,11 @@ public class MySQLExecutor implements DatabaseExecutor {
             plugin.getConfig().getInt("database.port", 3306),
             plugin.getConfig().getString("database.database", "zeauctionhouse")));
         cfg.setUsername(plugin.getConfig().getString("database.user", "root"));
-        cfg.setPassword(plugin.getConfig().getString("database.password", ""));
+        String password = plugin.getConfig().getString("database.password", "");
+        if (password == null || password.isEmpty()) {
+            plugin.getLogger().warning("MySQL database password is empty! This might cause connection issues or security vulnerabilities.");
+        }
+        cfg.setPassword(password);
         cfg.setMaximumPoolSize(plugin.getConfig().getInt("database.pool-size", 10));
         cfg.setConnectionTimeout(30_000);
         cfg.setIdleTimeout(600_000);

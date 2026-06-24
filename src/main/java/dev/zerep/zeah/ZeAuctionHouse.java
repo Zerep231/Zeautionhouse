@@ -92,6 +92,21 @@ public final class ZeAuctionHouse extends JavaPlugin {
         economy = new VanillaEconomy(this);
         shopManager.load();
         cacheManager.invalidate();
+
+        if (db != null) {
+            db.close();
+        }
+        try {
+            String type = getConfig().getString("database.type", "sqlite");
+            if ("mysql".equalsIgnoreCase(type)) {
+                db = new MySQLExecutor(this, getConfig().getInt("database.pool-size", 10));
+            } else {
+                db = new SQLiteExecutor(this);
+            }
+            db.initialize();
+        } catch (Exception e) {
+            getLogger().severe("Failed to reload database: " + e.getMessage());
+        }
     }
 
     public static ZeAuctionHouse getInstance() { return instance; }

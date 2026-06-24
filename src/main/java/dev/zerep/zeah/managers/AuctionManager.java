@@ -127,7 +127,8 @@ public class AuctionManager {
                     listing.getSellerUuid(), listing.getSellerName(), sellerCurrencyData
                 ).thenAccept(success -> {
                     if (!success) {
-                        // Listing gone — refund buyer
+                        // Listing gone — refund buyer and revert local status
+                        listing.setStatus(Listing.Status.ACTIVE);
                         Bukkit.getScheduler().runTask(plugin, () -> {
                             plugin.getEconomy().deposit(player, price);
                             player.sendMessage(plugin.getLang().format("auction.listing-not-found"));
@@ -161,6 +162,7 @@ public class AuctionManager {
 
                 }).exceptionally(ex -> {
                     plugin.getLogger().severe("Purchase failed: " + ex.getMessage());
+                    listing.setStatus(Listing.Status.ACTIVE);
                     Bukkit.getScheduler().runTask(plugin, () -> plugin.getEconomy().deposit(player, price));
                     return null;
                 });

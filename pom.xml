@@ -76,7 +76,7 @@
                         <goals><goal>shade</goal></goals>
                         <configuration>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
-                            <minimizeJar>false</minimizeJar>
+                            <minimizeJar>true</minimizeJar>
                             <filters>
                                 <filter>
                                     <artifact>*:*</artifact>
@@ -88,6 +88,9 @@
                                 </filter>
                                 <filter>
                                     <artifact>org.xerial:sqlite-jdbc</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
                                     <excludes>
                                         <exclude>org/sqlite/native/Mac/**</exclude>
                                         <exclude>org/sqlite/native/Windows/**</exclude>
@@ -104,10 +107,19 @@
                                 </filter>
                                 <filter>
                                     <artifact>mysql:mysql-connector-java</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
                                     <excludes>
                                         <exclude>com/google/**</exclude>
                                         <exclude>google/**</exclude>
                                     </excludes>
+                                </filter>
+                                <filter>
+                                    <artifact>com.zaxxer:HikariCP</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
                                 </filter>
                             </filters>
                             <relocations>

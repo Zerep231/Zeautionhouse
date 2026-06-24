@@ -15,6 +15,7 @@ import java.util.List;
 public class AHCommand implements CommandExecutor, TabCompleter {
 
     private final ZeAuctionHouse plugin;
+    private final java.util.Map<java.util.UUID, Long> cooldowns = new java.util.concurrent.ConcurrentHashMap<>();
 
     public AHCommand(ZeAuctionHouse plugin) {
         this.plugin = plugin;
@@ -26,6 +27,15 @@ public class AHCommand implements CommandExecutor, TabCompleter {
         if (!(sender instanceof Player player)) {
             sender.sendMessage(plugin.getLang().format("player-only")); return true;
         }
+        
+        long now = System.currentTimeMillis();
+        long lastCmd = cooldowns.getOrDefault(player.getUniqueId(), 0L);
+        if (now - lastCmd < 500 && !player.hasPermission("zeah.admin")) {
+            player.sendMessage("§cPlease wait a moment before using commands again.");
+            return true;
+        }
+        cooldowns.put(player.getUniqueId(), now);
+
         if (!player.hasPermission("zeah.use")) {
             player.sendMessage(plugin.getLang().format("no-permission")); return true;
         }
@@ -38,6 +48,9 @@ public class AHCommand implements CommandExecutor, TabCompleter {
         switch (args[0].toLowerCase()) {
 
             case "browse" -> {
+                if (!player.hasPermission("zeah.browse")) {
+                    player.sendMessage(plugin.getLang().format("no-permission")); return true;
+                }
                 int page = 0;
                 if (args.length >= 2) {
                     try { page = Math.max(0, Integer.parseInt(args[1]) - 1); }
@@ -70,8 +83,12 @@ public class AHCommand implements CommandExecutor, TabCompleter {
                 new ShopGUI(plugin, player).open();
             }
 
-            case "mylistings", "my", "list" ->
+            case "mylistings", "my", "list" -> {
+                if (!player.hasPermission("zeah.mylistings")) {
+                    player.sendMessage(plugin.getLang().format("no-permission")); return true;
+                }
                 new MyListingsGUI(plugin, player).open();
+            }
 
             case "reload" -> {
                 if (!player.hasPermission("zeah.admin")) {

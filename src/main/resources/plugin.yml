@@ -16,6 +16,12 @@ permissions:
   zeah.use:
     description: Use the auction house
     default: true
+  zeah.browse:
+    description: Browse the auction house
+    default: true
+  zeah.mylistings:
+    description: View your own listings
+    default: true
   zeah.sell:
     description: List items for sale
     default: true

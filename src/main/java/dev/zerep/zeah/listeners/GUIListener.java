@@ -16,6 +16,7 @@ public class GUIListener implements Listener {
 
     private final ZeAuctionHouse plugin;
     private final Map<UUID, AuctionGUI> openGUIs = new ConcurrentHashMap<>();
+    private final Map<UUID, Long> clickCooldowns = new ConcurrentHashMap<>();
 
     public GUIListener(ZeAuctionHouse plugin) {
         this.plugin = plugin;
@@ -39,6 +40,11 @@ public class GUIListener implements Listener {
 
         event.setCancelled(true);
 
+        long now = System.currentTimeMillis();
+        long lastClick = clickCooldowns.getOrDefault(player.getUniqueId(), 0L);
+        if (now - lastClick < 150) return; // 150ms anti-spam
+        clickCooldowns.put(player.getUniqueId(), now);
+
         if (event.getClickedInventory() == null) return;
         if (event.getClickedInventory() != event.getView().getTopInventory()) return;
         if (AuctionGUI.isDangerous(event)) return;
@@ -56,7 +62,9 @@ public class GUIListener implements Listener {
 
     @EventHandler
     public void onInventoryClose(InventoryCloseEvent event) {
-        if (event.getPlayer() instanceof Player player)
+        if (event.getPlayer() instanceof Player player) {
             openGUIs.remove(player.getUniqueId());
+            clickCooldowns.remove(player.getUniqueId());
+        }
     }
 }
