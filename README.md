@@ -1,106 +1,259 @@
-<div align="center">
+# ZeAuctionHouse V3.3
 
-# 🏷️ ZeAuctionHouse
+> **Stable · Secure · Scalable** — Minecraft Paper 1.21.1+ Auction House Plugin
 
-**Chợ giao dịch vật phẩm vanilla cho Paper 1.21+ · Hỗ trợ Geyser/Bedrock**
-
-[![Version](https://img.shields.io/badge/version-3.3-gold?style=flat-square)](https://github.com/Zerep231/Zeautionhouse/releases/latest)
-[![Paper](https://img.shields.io/badge/Paper-1.21.1+-f96854?style=flat-square)](https://papermc.io)
-[![Java](https://img.shields.io/badge/Java-21-blue?style=flat-square)](https://adoptium.net)
-[![Geyser](https://img.shields.io/badge/Geyser-supported-00b4d8?style=flat-square)](https://geysermc.org)
-
-### ⬇️ [Tải bản mới nhất tại đây →](https://github.com/Zerep231/Zeautionhouse/releases/latest)
-
-</div>
+[![Build](https://github.com/Zerep231/Zeautionhouse/actions/workflows/build.yml/badge.svg)](https://github.com/Zerep231/Zeautionhouse/actions)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Paper](https://img.shields.io/badge/Paper-1.21.1+-green.svg)](https://papermc.io)
 
 ---
 
-## ✨ Tính năng
+## Features
 
-- 🛒 **Chợ player** — mua bán bất kỳ item nào bằng nguyên liệu vanilla (Kim cương, Emerald…)
-- 📦 **Delivery Box** — item mua được giữ an toàn cho đến khi người chơi nhận
-- 🏪 **Build Shop** — shop danh mục do server quản lý (blocks, decoration…)
-- 🔒 **Anti-dupe** — chặn toàn bộ vector dupe GUI đã biết
-- ⚛️ **Giao dịch atomic** — không thể mua trùng, không mất item khi server crash
-- 📋 **Audit log** — mọi giao dịch đều được ghi lại trong database
-- 📱 **Bedrock/Geyser** — GUI hoạt động đầy đủ + lệnh `/ah sell <price>` cho mobile
-- ♻️ **Auto-expire** — listing hết hạn tự động trả item về tay người bán
-
----
-
-## 🚀 Cài đặt
-
-1. **[Tải file `.jar`](https://github.com/Zerep231/Zeautionhouse/releases/latest)**
-2. Bỏ vào thư mục `plugins/` của server
-3. Khởi động lại server — config tự tạo
-4. Chỉnh `plugins/AuctionHouse/config.yml` theo ý muốn
-5. `/ah reload` để áp dụng thay đổi config
-
-> **Yêu cầu:** Paper 1.21.1+, Java 21+
-> **Tùy chọn:** [Geyser](https://geysermc.org) + [Floodgate](https://github.com/GeyserMC/Floodgate) (để hỗ trợ Bedrock)
+| Feature | Status |
+|---------|--------|
+| ACID Transactions (buy/sell/cancel/expire) | ✅ |
+| Session persistence (crash-safe pending states) | ✅ |
+| Delivery system (PENDING → CLAIMING → CLAIMED) | ✅ |
+| Async DB operations (no main-thread blocking) | ✅ |
+| GUI click protection (drag/shift/hotkey blocked) | ✅ |
+| Cache with TTL + immediate invalidation | ✅ |
+| SQLite (default) + MySQL support | ✅ |
+| Builder Shop (7 categories, configurable) | ✅ |
+| Language system (en / vi, fully externalized) | ✅ |
+| Audit logs with 30-day auto-rotation | ✅ |
+| Item blacklist | ✅ |
+| Vault economy integration | ✅ |
+| Bedrock-friendly (left-click primary actions) | ✅ |
+| Pagination (45 items/page) | ✅ |
 
 ---
 
-## 🎮 Lệnh & Quyền
+## Requirements
 
-| Lệnh | Mô tả |
-|---|---|
-| `/ah` | Mở chợ Browse |
-| `/ah sell` | Mở GUI bán đồ (kéo item → đặt giá → xác nhận) |
-| `/ah sell <giá> [loại tiền]` | Bán nhanh item trên tay, không cần GUI *(cho Bedrock)* |
-| `/ah mine` | Xem và hủy listing của bạn |
-| `/ah deliveries` | Mở Delivery Box nhận đồ và tiền |
-| `/ah shop` | Mở Build Shop |
-| `/ah reload` | Reload config *(cần quyền admin)* |
-
-| Quyền | Mặc định | Mô tả |
-|---|---|---|
-| `ah.use` | Tất cả | Dùng tất cả lệnh player |
-| `ah.admin` | OP | Dùng `/ah reload` |
-| `ah.bypass-limit` | OP | Đăng nhiều hơn giới hạn `max-per-player` |
+- **Paper** 1.21.1+
+- **Java** 21
+- **Vault** + any economy plugin (EssentialsX Economy, CMI, etc.)
 
 ---
 
-## ⚙️ Config chính
+## Installation
+
+1. Drop `ZeAuctionHouse-3.3.0.jar` into your `plugins/` folder.
+2. Install [Vault](https://www.spigotmc.org/resources/vault.34315/) and an economy plugin.
+3. Restart server. Edit `plugins/ZeAuctionHouse/config.yml`.
+4. Reload with `/ah reload` (op only).
+
+---
+
+## Commands
+
+| Command | Description | Permission |
+|---------|-------------|------------|
+| `/ah` | Open auction house (page 1) | `zeah.use` |
+| `/ah browse [page]` | Browse listings | `zeah.use` |
+| `/ah sell <price>` | Sell held item | `zeah.sell` |
+| `/ah claim` | Claim all delivered items | `zeah.claim` |
+| `/ah shop` | Open builder shop | `zeah.shop` |
+| `/ah mylistings` | View & cancel your listings | `zeah.use` |
+| `/ah reload` | Reload config + lang | `zeah.admin` |
+
+**Aliases:** `/auctionhouse`, `/auction`
+
+---
+
+## Permissions
+
+| Permission | Description | Default |
+|------------|-------------|---------|
+| `zeah.use` | Use the auction house | everyone |
+| `zeah.sell` | List items for sale | everyone |
+| `zeah.claim` | Claim delivered items | everyone |
+| `zeah.shop` | Use builder shop | everyone |
+| `zeah.admin` | Reload, admin commands | op |
+| `zeah.bypass.limit` | Bypass listing limit | op |
+| `zeah.bypass.blacklist` | Sell blacklisted items | op |
+
+---
+
+## Configuration
 
 ```yaml
-max-per-player: 10          # Số listing tối đa mỗi người
-listing-expire-hours: 72    # Listing hết hạn sau bao nhiêu giờ
-broadcast-sales: true       # Thông báo toàn server khi có giao dịch
-max-price: 999999           # Giá tối đa
+# plugins/ZeAuctionHouse/config.yml
 
-currencies:
-  - DIAMOND
-  - EMERALD
-  - NETHERITE_INGOT
-  - GOLD_INGOT
-  - IRON_INGOT
+database:
+  type: sqlite       # sqlite or mysql
+  host: localhost
+  port: 3306
+  database: zeauctionhouse
+  user: root
+  password: ''
+  pool-size: 10
+
+cache:
+  ttl-seconds: 10    # Cache refresh interval
+
+session:
+  timeout-minutes: 5 # Auto-abort inactive sell sessions
+
+limits:
+  max-listings-per-player: 10
+  max-total-listings: 1000
+  max-price: 999999.0
+  min-price: 1.0
+  listing-fee-percent: 0.0  # % fee deducted on list (0 = disabled)
+
+expire:
+  check-interval-minutes: 10
+  default-days: 7            # Listings expire after N days
+
+log:
+  enabled: true
+  rotation-days: 30
+
+blacklist:
+  - BEDROCK
+  - COMMAND_BLOCK
+
+shop:
+  enabled: true
+  categories: [stone, wood, glass, decoration, plants, nether, end]
+
+lang: en   # en or vi
+```
+
+### MySQL Setup
+
+```yaml
+database:
+  type: mysql
+  host: 127.0.0.1
+  port: 3306
+  database: zeauctionhouse
+  user: zeah
+  password: your_password_here
+  pool-size: 10
+```
+
+### Custom Language
+
+Copy `plugins/ZeAuctionHouse/lang/en.yml` → `lang/custom.yml`, edit messages, set `lang: custom` in config.
+
+---
+
+## GUI Overview
+
+### Main Auction House (`/ah`)
+```
+┌─────────────────────────────────────────────┐
+│  [Item] [Item] [Item] ... (45 item slots)   │
+│  [Item] [Item] [Item] ... 5 rows of 9       │
+├─────────────────────────────────────────────┤
+│ [MyList] [Claim] [ ← ] [ ✕ ] [ → ]  nav   │
+└─────────────────────────────────────────────┘
+```
+- **Left-click** any item → opens Confirm Purchase dialog
+
+### Confirm Purchase (27-slot)
+```
+[ ═══════════════════════════════════════════ ]
+[  ✅ Confirm  ]  [ Item Preview ]  [ ❌ Back ]
+[ ═══════════════════════════════════════════ ]
+```
+
+### Builder Shop
+- Category overview → Item list per category
+- Left-click = buy 1 | Shift-left = buy 16 | Right-click = buy 64
+
+---
+
+## Database Schema
+
+```sql
+listings   (id, seller_uuid, seller_name, item_data BLOB, price, status, created_at, expire_at)
+deliveries (id, buyer_uuid,  buyer_name,  listing_id, item_data BLOB, status, reason, created_at)
+audit_logs (id, type, actor_uuid, details, created_at)
+```
+
+**Delivery Status Flow:**
+```
+PENDING ──► CLAIMING ──► CLAIMED
+  (row locked on CLAIMING to prevent duplicate claims)
 ```
 
 ---
 
-## 📜 Changelog
+## Architecture
 
-### v3.3
-- **Fix P0-1:** Item bị trả lại giữa bước CREATE_1 → CREATE_2 (transitioning flag)
-- **Fix P0-3:** Thứ tự claim đảo ngược — give item trước, xóa DB sau (an toàn hơn khi crash)
-- **Fix P0-4:** `cancelListing` kiểm tra kết quả update trước khi insert delivery
-- **Fix P0-5:** Pagination luôn về page 0 — `AhHolder` giờ lưu page trực tiếp
-- **Fix P1-5:** Delivery GUI có pagination (PREV/NEXT) cho >45 delivery
-- **Fix P2-1:** max-price được validate cả ở bước confirm GUI
-
-### v3.2.2
-- Fix: off-hand slot bị bỏ qua khi đếm currency (exploit kinh tế)
-
-### v3.2.1
-- Fix: quick-sell trả item về nếu DB lỗi
-- Fix: text hướng dẫn Step-1 GUI
-
-### v3.2.0
-- Rewrite lớn: GuiManager, TransactionManager, SessionManager, anti-dupe, slot maps, cache, audit log, Adventure API, Bedrock support
+```
+AuctionHouse/src/main/java/dev/zerep/zeah/
+├── database/
+│   ├── DatabaseExecutor.java       # Interface with CompletableFuture API
+│   ├── SQLiteExecutor.java         # Single-writer thread + WAL mode
+│   └── MySQLExecutor.java          # HikariCP pooled connections
+├── cache/
+│   └── ListingCache.java           # TTL cache with RW-lock, per-page access
+├── session/
+│   ├── CreateSession.java          # State machine: STARTED → COMPLETED
+│   └── SessionManager.java         # Timeout watcher + crash recovery
+├── gui/
+│   ├── AuctionGUI.java             # Base class: click protection, helpers
+│   ├── MainAuctionGUI.java         # 45-slot paginated listing browser
+│   ├── ConfirmBuyGUI.java          # Purchase confirmation (27-slot)
+│   ├── ConfirmSellGUI.java         # Sell confirmation (27-slot)
+│   ├── MyListingsGUI.java          # Cancel active listings
+│   ├── ShopGUI.java                # Builder shop category chooser
+│   └── ShopCategoryGUI.java        # Items per shop category
+├── managers/
+│   ├── AuctionManager.java         # Buy/sell/cancel/expire orchestration
+│   ├── CacheManager.java           # Cache lifecycle management
+│   ├── DeliveryManager.java        # Claim flow with inventory fallback
+│   └── AuditLogger.java            # DB + file logging, 30-day rotation
+├── shop/
+│   ├── ShopManager.java            # Loads shop/*.yml categories
+│   ├── ShopCategory.java
+│   └── ShopItem.java
+├── lang/
+│   └── LangManager.java            # Loads lang files, fallback to en
+├── commands/
+│   └── AHCommand.java              # /ah command + tab completion
+├── listeners/
+│   ├── GUIListener.java            # Blocks all dangerous inventory actions
+│   └── PlayerListener.java         # Join notify, quit session cleanup
+└── ZeAuctionHouse.java             # Plugin main class, wires all components
+```
 
 ---
 
-<div align="center">
-<sub>Made by <a href="https://github.com/Zerep231">Zerep</a> · Paper 1.21.1+ · No external plugin dependencies</sub>
-</div>
+## Building from Source
+
+```bash
+# Requires Java 21 + Maven 3.8+
+git clone https://github.com/Zerep231/Zeautionhouse.git
+cd Zeautionhouse/AuctionHouse
+mvn clean package
+# Output: target/ZeAuctionHouse-3.3.0.jar
+```
+
+---
+
+## Changelog
+
+### V3.3.0
+- Full rewrite following V3.3 design specification
+- ACID transaction safety on all write operations
+- Session persistence with 5-minute timeout and crash recovery
+- Delivery system with row-level locking (PENDING → CLAIMING → CLAIMED)
+- Cache invalidation on every write event, 10-second TTL
+- GUI: all dangerous click types blocked (shift, drag, hotkey, double-click)
+- Bilingual support: English + Vietnamese (externalized lang files)
+- Builder Shop with 7 configurable YAML categories
+- Audit logging to DB + rotating log files (30-day retention)
+- MySQL support with HikariCP, SQLite with WAL mode + single-writer
+- Vault economy integration (listing fee, purchase deduction, seller payout)
+
+---
+
+## License
+
+MIT © Zerep231

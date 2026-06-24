@@ -1,0 +1,37 @@
+name: "Nether"
+icon: NETHERRACK
+items:
+  - material: NETHERRACK
+    price: 2.0
+  - material: NETHER_BRICKS
+    price: 5.0
+  - material: NETHER_BRICK_FENCE
+    price: 3.0
+  - material: NETHER_BRICK_STAIRS
+    price: 4.0
+  - material: RED_NETHER_BRICKS
+    price: 6.0
+  - material: SOUL_SAND
+    price: 5.0
+  - material: SOUL_SOIL
+    price: 5.0
+  - material: CRIMSON_PLANKS
+    price: 4.0
+  - material: WARPED_PLANKS
+    price: 4.0
+  - material: CRIMSON_STEM
+    price: 4.0
+  - material: WARPED_STEM
+    price: 4.0
+  - material: NETHER_WART_BLOCK
+    price: 8.0
+  - material: WARPED_WART_BLOCK
+    price: 8.0
+  - material: BLACKSTONE
+    price: 5.0
+  - material: GILDED_BLACKSTONE
+    price: 15.0
+  - material: NETHER_QUARTZ_ORE
+    price: 10.0
+  - material: QUARTZ_BLOCK
+    price: 8.0

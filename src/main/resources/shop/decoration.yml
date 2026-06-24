@@ -1,0 +1,39 @@
+name: "Decoration"
+icon: LANTERN
+items:
+  - material: LANTERN
+    price: 6.0
+  - material: SOUL_LANTERN
+    price: 7.0
+  - material: TORCH
+    price: 1.0
+  - material: SOUL_TORCH
+    price: 2.0
+  - material: GLOWSTONE
+    price: 10.0
+  - material: SEA_LANTERN
+    price: 12.0
+  - material: SHROOMLIGHT
+    price: 10.0
+  - material: CANDLE
+    price: 5.0
+  - material: BOOKSHELF
+    price: 15.0
+  - material: FLOWER_POT
+    price: 3.0
+  - material: PAINTING
+    price: 5.0
+  - material: ITEM_FRAME
+    price: 4.0
+  - material: GLOW_ITEM_FRAME
+    price: 8.0
+  - material: BELL
+    price: 25.0
+  - material: CAMPFIRE
+    price: 10.0
+  - material: SOUL_CAMPFIRE
+    price: 12.0
+  - material: CHAIN
+    price: 8.0
+  - material: BARREL
+    price: 10.0

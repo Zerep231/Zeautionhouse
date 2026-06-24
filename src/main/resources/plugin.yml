@@ -1,25 +1,39 @@
-name: AuctionHouse
-version: 3.3.0
-main: me.zerep.auctionhouse.AuctionHousePlugin
+name: ZeAuctionHouse
+version: '${project.version}'
+main: dev.zerep.zeah.ZeAuctionHouse
 api-version: '1.21'
-authors: [Zerep]
-description: Vanilla commodity marketplace with build shop and delivery box.
-softdepend: [floodgate]
+description: Stable, secure, scalable AuctionHouse for Paper 1.21.1+
+authors: [Zerep231]
+website: https://github.com/Zerep231/Zeautionhouse
+
+softdepend:
+  - Vault
 
 commands:
   ah:
     description: Main AuctionHouse command
-    usage: /ah [sell|mine|deliveries|shop|reload]
-    aliases: [auction, auctionhouse]
-    permission: ah.use
+    usage: /ah [browse|sell|claim|shop|mylistings|reload]
+    aliases: [auctionhouse, auction]
 
 permissions:
-  ah.use:
-    description: Use AuctionHouse
+  zeah.use:
+    description: Use the auction house
     default: true
-  ah.admin:
-    description: Admin permission for reload and management
+  zeah.sell:
+    description: Sell items
+    default: true
+  zeah.claim:
+    description: Claim delivered items
+    default: true
+  zeah.shop:
+    description: Use the builder shop
+    default: true
+  zeah.admin:
+    description: Admin commands (reload, forceexpire, etc.)
     default: op
-  ah.bypass-limit:
-    description: Bypass listing limit
+  zeah.bypass.limit:
+    description: Bypass max listing limit
+    default: op
+  zeah.bypass.blacklist:
+    description: Bypass item blacklist
     default: op

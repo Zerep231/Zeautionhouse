@@ -1,0 +1,39 @@
+name: "Wood & Lumber"
+icon: OAK_LOG
+items:
+  - material: OAK_LOG
+    price: 3.0
+  - material: SPRUCE_LOG
+    price: 3.0
+  - material: BIRCH_LOG
+    price: 3.0
+  - material: JUNGLE_LOG
+    price: 4.0
+  - material: ACACIA_LOG
+    price: 4.0
+  - material: DARK_OAK_LOG
+    price: 4.0
+  - material: MANGROVE_LOG
+    price: 4.0
+  - material: CHERRY_LOG
+    price: 5.0
+  - material: OAK_PLANKS
+    price: 2.0
+  - material: SPRUCE_PLANKS
+    price: 2.0
+  - material: BIRCH_PLANKS
+    price: 2.0
+  - material: JUNGLE_PLANKS
+    price: 2.0
+  - material: ACACIA_PLANKS
+    price: 2.0
+  - material: DARK_OAK_PLANKS
+    price: 2.0
+  - material: OAK_SLAB
+    price: 1.0
+  - material: OAK_STAIRS
+    price: 2.5
+  - material: OAK_FENCE
+    price: 2.0
+  - material: OAK_DOOR
+    price: 5.0

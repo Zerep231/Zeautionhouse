@@ -1,0 +1,41 @@
+name: "Plants & Nature"
+icon: OAK_SAPLING
+items:
+  - material: OAK_SAPLING
+    price: 2.0
+  - material: SPRUCE_SAPLING
+    price: 2.0
+  - material: BIRCH_SAPLING
+    price: 2.0
+  - material: JUNGLE_SAPLING
+    price: 2.0
+  - material: ACACIA_SAPLING
+    price: 2.0
+  - material: DARK_OAK_SAPLING
+    price: 2.0
+  - material: DANDELION
+    price: 1.0
+  - material: POPPY
+    price: 1.0
+  - material: BLUE_ORCHID
+    price: 2.0
+  - material: ALLIUM
+    price: 2.0
+  - material: OXEYE_DAISY
+    price: 2.0
+  - material: CORNFLOWER
+    price: 2.0
+  - material: SUNFLOWER
+    price: 3.0
+  - material: ROSE_BUSH
+    price: 3.0
+  - material: LILAC
+    price: 3.0
+  - material: PEONY
+    price: 3.0
+  - material: GRASS_BLOCK
+    price: 2.0
+  - material: PODZOL
+    price: 3.0
+  - material: MYCELIUM
+    price: 5.0

@@ -4,15 +4,18 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>me.zerep</groupId>
-    <artifactId>auctionhouse</artifactId>
+    <groupId>dev.zerep</groupId>
+    <artifactId>ZeAuctionHouse</artifactId>
     <version>3.3.0</version>
     <packaging>jar</packaging>
 
+    <name>ZeAuctionHouse</name>
+    <description>Stable, secure, scalable AuctionHouse for Paper 1.21.1+</description>
+
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.release>21</maven.compiler.release>
-        <paper.version>1.21.1-R0.1-SNAPSHOT</paper.version>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
     </properties>
 
     <repositories>
@@ -21,91 +24,91 @@
             <url>https://repo.papermc.io/repository/maven-public/</url>
         </repository>
         <repository>
-            <id>opencollab-snapshot</id>
-            <url>https://repo.opencollab.dev/main/</url>
+            <id>vault-repo</id>
+            <url>https://nexus.hc.to/content/repositories/pub_releases</url>
         </repository>
     </repositories>
 
     <dependencies>
-        <!-- Paper API (bundles Adventure) -->
         <dependency>
             <groupId>io.papermc.paper</groupId>
             <artifactId>paper-api</artifactId>
-            <version>${paper.version}</version>
+            <version>1.21.1-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
-
-        <!-- Floodgate API – soft-depend, Bedrock player detection -->
         <dependency>
-            <groupId>org.geysermc.floodgate</groupId>
-            <artifactId>api</artifactId>
-            <version>2.2.3-SNAPSHOT</version>
+            <groupId>net.milkbowl.vault</groupId>
+            <artifactId>VaultAPI</artifactId>
+            <version>1.7</version>
             <scope>provided</scope>
         </dependency>
-
-        <!-- SQLite JDBC bundled via shade -->
         <dependency>
             <groupId>org.xerial</groupId>
             <artifactId>sqlite-jdbc</artifactId>
-            <version>3.46.0.0</version>
+            <version>3.47.1.0</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+            <version>5.1.0</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>8.0.33</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 
     <build>
-        <finalName>ZeAuctionHouse</finalName>
+        <defaultGoal>clean package</defaultGoal>
+        <finalName>${project.artifactId}-${project.version}</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.13.0</version>
                 <configuration>
-                    <release>21</release>
+                    <source>17</source>
+                    <target>17</target>
+                    <encoding>UTF-8</encoding>
                 </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.5.2</version>
+                <version>3.6.0</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
                         <goals><goal>shade</goal></goals>
                         <configuration>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
+                            <minimizeJar>true</minimizeJar>
                             <filters>
-                                <!-- Keep our own classes always -->
                                 <filter>
-                                    <artifact>me.zerep:auctionhouse</artifact>
-                                    <includes><include>**</include></includes>
-                                </filter>
-                                <!-- SQLite JDBC: keep Java classes + only Linux natives needed for Paper servers -->
-                                <filter>
-                                    <artifact>org.xerial:sqlite-jdbc</artifact>
+                                    <artifact>*:*</artifact>
                                     <excludes>
-                                        <!-- Remove ALL native libs except Linux x86_64 and aarch64 -->
-                                        <exclude>org/sqlite/native/FreeBSD/**</exclude>
-                                        <exclude>org/sqlite/native/Linux-Android/**</exclude>
-                                        <exclude>org/sqlite/native/Linux-Musl/**</exclude>
-                                        <exclude>org/sqlite/native/Linux/arm/**</exclude>
-                                        <exclude>org/sqlite/native/Linux/armv6/**</exclude>
-                                        <exclude>org/sqlite/native/Linux/armv7/**</exclude>
-                                        <exclude>org/sqlite/native/Linux/ppc64/**</exclude>
-                                        <exclude>org/sqlite/native/Linux/x86/**</exclude>
-                                        <exclude>org/sqlite/native/Mac/**</exclude>
-                                        <exclude>org/sqlite/native/Windows/**</exclude>
-                                        <exclude>META-INF/native-image/**</exclude>
+                                        <exclude>META-INF/*.SF</exclude>
+                                        <exclude>META-INF/*.DSA</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
                                     </excludes>
-                                </filter>
-                                <!-- Drop slf4j – already provided by Paper server -->
-                                <filter>
-                                    <artifact>org.slf4j:slf4j-api</artifact>
-                                    <excludes><exclude>**</exclude></excludes>
                                 </filter>
                             </filters>
                             <relocations>
                                 <relocation>
                                     <pattern>org.sqlite</pattern>
-                                    <shadedPattern>me.zerep.auctionhouse.libs.sqlite</shadedPattern>
+                                    <shadedPattern>dev.zerep.zeah.libs.sqlite</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>com.zaxxer.hikari</pattern>
+                                    <shadedPattern>dev.zerep.zeah.libs.hikari</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>com.mysql</pattern>
+                                    <shadedPattern>dev.zerep.zeah.libs.mysql</shadedPattern>
                                 </relocation>
                             </relocations>
                         </configuration>
@@ -113,5 +116,11 @@
                 </executions>
             </plugin>
         </plugins>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
     </build>
 </project>

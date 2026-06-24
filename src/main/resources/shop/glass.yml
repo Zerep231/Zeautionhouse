@@ -1,0 +1,39 @@
+name: "Glass & Dyes"
+icon: GLASS
+items:
+  - material: GLASS
+    price: 4.0
+  - material: GLASS_PANE
+    price: 2.0
+  - material: WHITE_STAINED_GLASS
+    price: 5.0
+  - material: ORANGE_STAINED_GLASS
+    price: 5.0
+  - material: MAGENTA_STAINED_GLASS
+    price: 5.0
+  - material: LIGHT_BLUE_STAINED_GLASS
+    price: 5.0
+  - material: YELLOW_STAINED_GLASS
+    price: 5.0
+  - material: LIME_STAINED_GLASS
+    price: 5.0
+  - material: PINK_STAINED_GLASS
+    price: 5.0
+  - material: GRAY_STAINED_GLASS
+    price: 5.0
+  - material: CYAN_STAINED_GLASS
+    price: 5.0
+  - material: PURPLE_STAINED_GLASS
+    price: 5.0
+  - material: BLUE_STAINED_GLASS
+    price: 5.0
+  - material: BROWN_STAINED_GLASS
+    price: 5.0
+  - material: GREEN_STAINED_GLASS
+    price: 5.0
+  - material: RED_STAINED_GLASS
+    price: 5.0
+  - material: BLACK_STAINED_GLASS
+    price: 5.0
+  - material: TINTED_GLASS
+    price: 8.0

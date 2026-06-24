@@ -1,112 +1,53 @@
-max-per-player: 10
-listing-expire-hours: 72
-expire-check-interval-minutes: 10
-broadcast-sales: true
-max-price: 999999
-default-price: 1
+# ZeAuctionHouse V3.3 Configuration
 
-currencies:
-  - DIAMOND
-  - EMERALD
-  - NETHERITE_INGOT
-  - GOLD_INGOT
-  - IRON_INGOT
+database:
+  type: sqlite   # sqlite or mysql
+  host: localhost
+  port: 3306
+  database: zeauctionhouse
+  user: root
+  password: ''
+  pool-size: 10
 
-currency-display:
-  DIAMOND: "&bDiamond"
-  EMERALD: "&2Emerald"
-  NETHERITE_INGOT: "&8Netherite"
-  GOLD_INGOT: "&6Gold"
-  IRON_INGOT: "&7Iron"
+cache:
+  ttl-seconds: 10
 
-messages:
-  no-permission: "&cYou do not have permission."
-  player-only: "&cOnly players may use this command."
-  admin-reload: "&a[AH] Config reloaded."
-  sell-success: "&a[AH] Your listing has been created."
-  sell-cancelled: "&c[AH] Listing cancelled — item returned to your inbox."
-  sell-error: "&c[AH] Failed to create listing. Please try again."
-  sell-limit: "&c[AH] You have reached your listing limit."
-  sell-no-item: "&c[AH] Hold an item in your main hand to sell it."
-  sell-invalid-price: "&c[AH] Invalid price. Use a positive number."
-  sell-price-too-high: "&c[AH] Price exceeds the server maximum."
-  sell-invalid-currency: "&c[AH] Unknown currency. Use /ah sell <price> <DIAMOND|EMERALD|...>"
-  buy-success: "&a[AH] Purchase complete! Check /ah deliveries."
-  buy-not-enough: "&c[AH] You need &e{amount}x {currency} &cto buy this."
-  buy-own-item: "&c[AH] You cannot buy your own listing."
-  listing-gone: "&c[AH] That listing is no longer available."
-  claim-success: "&a[AH] Claimed: {desc}"
-  claim-none: "&7[AH] You have nothing to claim."
-  shop-buy-success: "&a[AH] Purchased from Build Shop! Check your inventory."
-  # P2.2 – shown to Bedrock players instead of the drag-and-drop GUI
-  bedrock-sell-hint: "&e[AH] &7Hold your item and type &f/ah sell <price> [currency]&7 to list it."
-  broadcast-sale: "&6[AH] &e{buyer} &6bought &e{item} &6from &e{seller} &6for &e{amount}x {currency}"
+session:
+  timeout-minutes: 5
+
+limits:
+  max-listings-per-player: 10
+  max-total-listings: 1000
+  max-price: 999999.0
+  min-price: 1.0
+  listing-fee-percent: 0.0   # 0 = disabled
+
+expire:
+  check-interval-minutes: 10
+  default-days: 7
+
+log:
+  enabled: true
+  rotation-days: 30
+
+blacklist:
+  - BEDROCK
+  - COMMAND_BLOCK
+  - COMMAND_BLOCK_MINECART
+  - STRUCTURE_BLOCK
+  - BARRIER
+  - DEBUG_STICK
+  - KNOWLEDGE_BOOK
 
 shop:
+  enabled: true
   categories:
-    blocks:
-      title: "&aBlocks"
-      items:
-        stone:
-          material: STONE
-          amount: 64
-          price: 1
-          currencies: [IRON_INGOT, GOLD_INGOT, EMERALD, DIAMOND]
-        cobblestone:
-          material: COBBLESTONE
-          amount: 64
-          price: 1
-          currencies: [IRON_INGOT, GOLD_INGOT, EMERALD, DIAMOND]
-        glass:
-          material: GLASS
-          amount: 64
-          price: 2
-          currencies: [IRON_INGOT, GOLD_INGOT, EMERALD, DIAMOND]
-        oak_planks:
-          material: OAK_PLANKS
-          amount: 64
-          price: 2
-          currencies: [IRON_INGOT, GOLD_INGOT, EMERALD, DIAMOND]
-        white_concrete:
-          material: WHITE_CONCRETE
-          amount: 64
-          price: 3
-          currencies: [IRON_INGOT, GOLD_INGOT, EMERALD, DIAMOND]
-        oak_log:
-          material: OAK_LOG
-          amount: 64
-          price: 2
-          currencies: [IRON_INGOT, GOLD_INGOT, EMERALD, DIAMOND]
-        sand:
-          material: SAND
-          amount: 64
-          price: 1
-          currencies: [IRON_INGOT, GOLD_INGOT, EMERALD, DIAMOND]
-        gravel:
-          material: GRAVEL
-          amount: 64
-          price: 1
-          currencies: [IRON_INGOT, GOLD_INGOT, EMERALD, DIAMOND]
-    decoration:
-      title: "&dDecoration"
-      items:
-        lantern:
-          material: LANTERN
-          amount: 16
-          price: 2
-          currencies: [IRON_INGOT, GOLD_INGOT, EMERALD, DIAMOND]
-        flower_pot:
-          material: FLOWER_POT
-          amount: 16
-          price: 1
-          currencies: [IRON_INGOT, GOLD_INGOT, EMERALD, DIAMOND]
-        sea_lantern:
-          material: SEA_LANTERN
-          amount: 16
-          price: 3
-          currencies: [GOLD_INGOT, EMERALD, DIAMOND]
-        glowstone:
-          material: GLOWSTONE
-          amount: 32
-          price: 2
-          currencies: [GOLD_INGOT, EMERALD, DIAMOND]
+    - stone
+    - wood
+    - glass
+    - decoration
+    - plants
+    - nether
+    - end
+
+lang: en
