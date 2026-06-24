@@ -20,12 +20,11 @@ jobs:
           cache: maven
 
       - name: Build with Maven
-        working-directory: AuctionHouse
         run: mvn clean package -q
 
       - name: Upload JAR artifact
         uses: actions/upload-artifact@v4
         with:
           name: ZeAuctionHouse-${{ github.sha }}
-          path: AuctionHouse/target/ZeAuctionHouse-*.jar
+          path: target/ZeAuctionHouse-*.jar
           retention-days: 30
