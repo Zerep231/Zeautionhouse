@@ -1,0 +1,16 @@
+currencies:
+  diamond:
+    material: DIAMOND
+    name: "Diamond"
+  emerald:
+    material: EMERALD
+    name: "Emerald"
+  gold_ingot:
+    material: GOLD_INGOT
+    name: "Gold Ingot"
+  iron_ingot:
+    material: IRON_INGOT
+    name: "Iron Ingot"
+  netherite_ingot:
+    material: NETHERITE_INGOT
+    name: "Netherite Ingot"
