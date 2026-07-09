@@ -1,0 +1,21 @@
+name: "The End"
+icon: END_STONE
+items:
+  - material: END_STONE
+    price: 5.0
+  - material: END_STONE_BRICKS
+    price: 6.0
+  - material: PURPUR_BLOCK
+    price: 10.0
+  - material: PURPUR_PILLAR
+    price: 12.0
+  - material: PURPUR_STAIRS
+    price: 10.0
+  - material: PURPUR_SLAB
+    price: 8.0
+  - material: CHORUS_PLANT
+    price: 8.0
+  - material: CHORUS_FLOWER
+    price: 8.0
+  - material: END_ROD
+    price: 15.0
