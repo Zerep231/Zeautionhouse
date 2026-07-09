@@ -1,0 +1,40 @@
+# AuctionHouse Messages
+# Use & for color codes, {placeholders} for variables
+
+prefix: "&8[&6AH&8] &r"
+
+general:
+  no-permission: "&cYou don't have permission to do that."
+  player-only: "&cOnly players can use this command."
+  invalid-amount: "&cInvalid amount: &e{input}"
+  reload: "&aPlugin reloaded successfully."
+
+auction:
+  item-listed: "&aItem listed! Starting price: &6{price}&a, Duration: &6{duration}h&a."
+  item-listed-buyout: "&aItem listed! Starting: &6{price}&a, Buyout: &6{buyout}&a, Duration: &6{duration}h&a."
+  listing-fee: "&eA listing fee of &6{fee} &ehas been charged."
+  bid-placed: "&aYou bid &6{price} &aon &6{item}&a!"
+  outbid-notification: "&cYou were outbid on &e{item}&c! New bid: &6{price}&c. Your &6{refund} &chas been refunded."
+  sold-notification: "&a&lITEM SOLD! &r&aYour &e{item} &asold for &6{price}&a! Funds added to your account."
+  expired-no-bids: "&7Your auction for &e{item} &7expired with no bids. Item returned."
+  won-auction: "&a&lYOU WON! &r&aYou won the auction for &e{item} &awith a bid of &6{price}&a!"
+  cancelled: "&aAuction cancelled. Item returned to your inventory."
+  cancel-no-bids-only: "&cYou can only cancel auctions that have no bids."
+  not-enough-money: "&cYou need &6{price} &cbut only have &6{balance}&c."
+  cannot-bid-own: "&cYou cannot bid on your own auction."
+  cannot-buy-own: "&cYou cannot buy your own auction."
+  max-listings: "&cYou have reached your max listing limit (&e{max}&c)."
+  min-price: "&cMinimum price is &e{min}&c."
+  min-bid: "&cMinimum bid is &e{min} &c(+{pct}% of current price)."
+  inventory-full: "&cYour inventory is full! Item saved to uncollected items."
+  item-collected: "&aYou collected &e{item}&a."
+  no-uncollected: "&7You have no uncollected items."
+  hold-item: "&cYou must hold an item to sell it."
+  no-auctions: "&7No auctions found."
+
+commands:
+  usage-ah: "&eUsage: /ah [sell|bids|own|help]"
+  usage-sell: "&eUsage: /ah sell <startPrice> [buyoutPrice] [hours]"
+  usage-cancel: "&eUsage: /ah cancel <id>"
+  usage-bid: "&eUsage: /ah bid <id> <amount>"
+  admin-cleared: "&aCleared &e{count} &aexpired auctions."

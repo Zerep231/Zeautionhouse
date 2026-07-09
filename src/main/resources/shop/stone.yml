@@ -1,0 +1,39 @@
+name: "Stone & Minerals"
+icon: STONE
+items:
+  - material: STONE
+    price: 2.0
+  - material: COBBLESTONE
+    price: 1.0
+  - material: GRANITE
+    price: 3.0
+  - material: DIORITE
+    price: 3.0
+  - material: ANDESITE
+    price: 3.0
+  - material: DEEPSLATE
+    price: 4.0
+  - material: COBBLED_DEEPSLATE
+    price: 3.0
+  - material: GRAVEL
+    price: 1.5
+  - material: SAND
+    price: 1.5
+  - material: SANDSTONE
+    price: 4.0
+  - material: SMOOTH_STONE
+    price: 5.0
+  - material: STONE_BRICKS
+    price: 5.0
+  - material: CRACKED_STONE_BRICKS
+    price: 6.0
+  - material: MOSSY_STONE_BRICKS
+    price: 7.0
+  - material: CHISELED_STONE_BRICKS
+    price: 7.0
+  - material: BLACKSTONE
+    price: 5.0
+  - material: BASALT
+    price: 4.0
+  - material: MAGMA_BLOCK
+    price: 8.0
