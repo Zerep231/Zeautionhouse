@@ -51,6 +51,7 @@ public class CreateSession {
         touch();
     }
 
+    public void setCurrencyId(String currencyId) { this.currencyId = currencyId; touch(); }
     public void touch() {
         this.lastActivity = System.currentTimeMillis();
     }

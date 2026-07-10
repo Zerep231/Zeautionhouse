@@ -100,7 +100,7 @@ public class AuctionManager {
                 int balance = plugin.getCurrencyManager().getBalance(player, listing.getCurrencyId());
                 if (balance < price) {
                     player.sendMessage(plugin.getLang().format("auction.not-enough-items",
-                        "price", plugin.getCurrencyManager().format(price, session.getCurrencyId()),
+                        "price", plugin.getCurrencyManager().format(price, listing.getCurrencyId()),
                         "balance", plugin.getCurrencyManager().format(balance, listing.getCurrencyId())));
                     return;
                 }
@@ -108,8 +108,8 @@ public class AuctionManager {
                 // Deduct currency from buyer BEFORE DB transaction
                 if (!plugin.getCurrencyManager().withdraw(player, price, listing.getCurrencyId())) {
                     player.sendMessage(plugin.getLang().format("auction.not-enough-items",
-                        "price", plugin.getCurrencyManager().format(price, session.getCurrencyId()),
-                        "balance", plugin.getCurrencyManager().format(plugin.getCurrencyManager().getBalance(player, listing.getCurrencyId()))));
+                        "price", plugin.getCurrencyManager().format(price, listing.getCurrencyId()),
+                        "balance", plugin.getCurrencyManager().format(plugin.getCurrencyManager().getBalance(player, listing.getCurrencyId()), listing.getCurrencyId())));
                     return;
                 }
 
@@ -143,12 +143,12 @@ public class AuctionManager {
                         if (sellerOnline != null && sellerOnline.isOnline()) {
                             plugin.getDeliveryManager().tryClaimOnline(sellerOnline);
                             sellerOnline.sendMessage(plugin.getLang().format("auction.seller-sold",
-                                "price", plugin.getCurrencyManager().format(price, session.getCurrencyId())));
+                                "price", plugin.getCurrencyManager().format(price, listing.getCurrencyId())));
                         }
 
                         player.sendMessage(plugin.getLang().format("auction.purchase-success",
                             "item", tryGetName(listing),
-                            "price", plugin.getCurrencyManager().format(price, session.getCurrencyId())));
+                            "price", plugin.getCurrencyManager().format(price, listing.getCurrencyId())));
 
                         plugin.getDb().countPendingDeliveries(player.getUniqueId())
                             .thenAccept(count -> Bukkit.getScheduler().runTask(plugin, () ->

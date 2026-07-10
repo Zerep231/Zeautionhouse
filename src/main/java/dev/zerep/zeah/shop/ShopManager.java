@@ -51,7 +51,7 @@ public class ShopManager {
                     ? (int) Double.parseDouble(String.valueOf(entry.get("price"))) : 1;
                 try {
                     Material material = Material.valueOf(mat.toUpperCase());
-                    if (material != plugin.getCurrencyManager().getCurrency(currencyId).material()) {
+                    if (material != plugin.getCurrencyManager().getCurrency(isec.getString("currency", "diamond").toLowerCase()).material()) {
                         items.add(new ShopItem(material, price));
                     }
                 } catch (IllegalArgumentException ignored) {}
