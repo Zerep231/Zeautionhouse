@@ -41,7 +41,7 @@ public class AHCommand implements CommandExecutor, TabCompleter {
         }
 
         if (args.length == 0) {
-            new MainMenuGUI(plugin, player).open();
+            new MainAuctionGUI(plugin, player, 0).open();
             return true;
         }
 
@@ -98,7 +98,7 @@ public class AHCommand implements CommandExecutor, TabCompleter {
                 player.sendMessage(plugin.getLang().format("plugin-reload"));
             }
 
-            default -> new MainMenuGUI(plugin, player).open();
+            default -> new MainAuctionGUI(plugin, player, 0).open();
         }
         return true;
     }
