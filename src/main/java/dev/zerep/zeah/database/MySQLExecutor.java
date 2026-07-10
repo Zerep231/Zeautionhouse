@@ -383,7 +383,7 @@ public class MySQLExecutor implements DatabaseExecutor {
     private Listing rowToListing(ResultSet rs) throws SQLException {
         return new Listing(rs.getInt("id"),
             UUID.fromString(rs.getString("seller_uuid")), rs.getString("seller_name"),
-            rs.getBytes("item_data"), rs.getDouble("price"),
+            rs.getBytes("item_data"), rs.getDouble("price"), rs.getString("currency_id"),
             Listing.Status.valueOf(rs.getString("status")),
             rs.getLong("created_at"), rs.getLong("expire_at"));
     }

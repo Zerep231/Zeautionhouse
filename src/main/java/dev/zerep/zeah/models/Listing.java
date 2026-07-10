@@ -18,7 +18,7 @@ public class Listing {
     private final long expireAt;
 
     public Listing(int id, UUID sellerUuid, String sellerName, byte[] itemData,
-                   double price, Status status, long createdAt, long expireAt) {
+                   double price, String currencyId, Status status, long createdAt, long expireAt) {
         this.id = id;
         this.sellerUuid = sellerUuid;
         this.sellerName = sellerName;

@@ -448,6 +448,7 @@ public class SQLiteExecutor implements DatabaseExecutor {
             rs.getString("seller_name"),
             rs.getBytes("item_data"),
             rs.getDouble("price"),
+            rs.getString("currency_id"),
             Listing.Status.valueOf(rs.getString("status")),
             rs.getLong("created_at"),
             rs.getLong("expire_at")
