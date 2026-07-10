@@ -47,8 +47,8 @@ public class ShopManager {
             List<ShopItem> items = new ArrayList<>();
             for (var entry : cfg.getMapList("items")) {
                 String mat = String.valueOf(entry.get("material"));
-                int price = entry.containsKey("price")
-                    ? (int) Double.parseDouble(String.valueOf(entry.get("price"))) : 1;
+                int price = entry.containsKey("price") ? (int) Double.parseDouble(String.valueOf(entry.get("price"))) : 1;
+                String currencyId = entry.containsKey("currency") ? String.valueOf(entry.get("currency")) : "diamond";
                 try {
                     Material material = Material.valueOf(mat.toUpperCase());
                     boolean isCurrency = false;
@@ -59,7 +59,7 @@ public class ShopManager {
                         }
                     }
                     if (!isCurrency) {
-                        items.add(new ShopItem(material, price));
+                        items.add(new ShopItem(material, price, currencyId));
                     }
                 } catch (IllegalArgumentException ignored) {}
             }

@@ -7,7 +7,7 @@ public class ShopItem {
     private final int price;
     private final String currencyId;
 
-    public ShopItem(Material material, int price) {
+    public ShopItem(Material material, int price, String currencyId) {
         this.material = material;
         this.price = price;
         this.currencyId = currencyId;
