@@ -52,7 +52,7 @@ public class ShopManager {
                 try {
                     Material material = Material.valueOf(mat.toUpperCase());
                     boolean isCurrency = false;
-                    for (dev.zerep.zeah.currency.Currency c : plugin.getCurrencyManager().getCurrencies().values()) {
+                    for (dev.zerep.zeah.currency.CurrencyManager.Currency c : plugin.getCurrencyManager().getCurrencies().values()) {
                         if (c.material() == material) {
                             isCurrency = true;
                             break;
