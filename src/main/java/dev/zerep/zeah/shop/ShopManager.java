@@ -51,7 +51,14 @@ public class ShopManager {
                     ? (int) Double.parseDouble(String.valueOf(entry.get("price"))) : 1;
                 try {
                     Material material = Material.valueOf(mat.toUpperCase());
-                    if (material != plugin.getCurrencyManager().getCurrency(isec.getString("currency", "diamond").toLowerCase()).material()) {
+                    boolean isCurrency = false;
+                    for (dev.zerep.zeah.currency.Currency c : plugin.getCurrencyManager().getCurrencies().values()) {
+                        if (c.material() == material) {
+                            isCurrency = true;
+                            break;
+                        }
+                    }
+                    if (!isCurrency) {
                         items.add(new ShopItem(material, price));
                     }
                 } catch (IllegalArgumentException ignored) {}
