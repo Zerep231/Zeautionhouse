@@ -2,7 +2,6 @@ package dev.zerep.zeah.commands;
 
 import dev.zerep.zeah.ZeAuctionHouse;
 import dev.zerep.zeah.gui.MainAuctionGUI;
-import dev.zerep.zeah.gui.MainMenuGUI;
 import dev.zerep.zeah.gui.MyListingsGUI;
 import dev.zerep.zeah.gui.SellGUI;
 import dev.zerep.zeah.gui.ShopGUI;
