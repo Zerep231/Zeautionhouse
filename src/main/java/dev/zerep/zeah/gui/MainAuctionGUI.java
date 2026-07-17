@@ -73,12 +73,14 @@ public class MainAuctionGUI extends AuctionGUI {
                 setNavItem(49, page > 0, page + 1 < totalPages);
 
                 // Action buttons
-                inventory.setItem(45, buildItem(Material.GOLD_INGOT, "&eSell Item", List.of("&7List an item for sale")));
-                inventory.setItem(46, buildItem(Material.BOOK, "&eMyListings", List.of("&7View your active listings")));
-                inventory.setItem(52, buildItem(Material.CHEST, "&eClaim Items", List.of("&7Collect items from your mailbox")));
-                if (plugin.getConfig().getBoolean("shop.enabled", true)) {
-                    inventory.setItem(53, buildItem(Material.BRICKS, "&eShop", List.of("&7Buy building materials")));
-                }
+                inventory.setItem(45, buildItem(Material.BOOK,
+                    plugin.getLang().getNoPrefix("gui.my-listings-button") != null
+                        ? plugin.getLang().getNoPrefix("gui.my-listings-button") : "&eMyListings",
+                    List.of("&7View your active listings")));
+                inventory.setItem(46, buildItem(Material.CHEST,
+                    "&eClaim Items",
+                    List.of("&7Collect items from your mailbox")));
+
                 player.openInventory(inventory);
                 register();
             });
@@ -96,10 +98,8 @@ public class MainAuctionGUI extends AuctionGUI {
         if (slot == 47) { player.closeInventory(); new MainAuctionGUI(plugin, player, page - 1).open(); return; }
         if (slot == 49) { player.closeInventory(); return; }
         if (slot == 51) { player.closeInventory(); new MainAuctionGUI(plugin, player, page + 1).open(); return; }
-        if (slot == 45) { player.closeInventory(); new SellGUI(plugin, player).open(); return; }
-        if (slot == 46) { player.closeInventory(); new MyListingsGUI(plugin, player).open(); return; }
-        if (slot == 52) { player.closeInventory(); plugin.getDeliveryManager().claimAll(player); return; }
-        if (slot == 53 && plugin.getConfig().getBoolean("shop.enabled", true)) { player.closeInventory(); new ShopGUI(plugin, player).open(); return; }
+        if (slot == 45) { player.closeInventory(); new MyListingsGUI(plugin, player).open(); return; }
+        if (slot == 46) { player.closeInventory(); plugin.getDeliveryManager().claimAll(player); return; }
 
         // Listing click (left click only for Bedrock-friendly)
         if (slot < PAGE_SIZE && slotToListingId.containsKey(slot)) {

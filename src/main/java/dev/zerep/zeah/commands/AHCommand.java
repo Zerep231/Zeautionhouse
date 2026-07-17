@@ -2,6 +2,7 @@ package dev.zerep.zeah.commands;
 
 import dev.zerep.zeah.ZeAuctionHouse;
 import dev.zerep.zeah.gui.MainAuctionGUI;
+import dev.zerep.zeah.gui.MainMenuGUI;
 import dev.zerep.zeah.gui.MyListingsGUI;
 import dev.zerep.zeah.gui.SellGUI;
 import dev.zerep.zeah.gui.ShopGUI;
@@ -40,7 +41,7 @@ public class AHCommand implements CommandExecutor, TabCompleter {
         }
 
         if (args.length == 0) {
-            new MainAuctionGUI(plugin, player, 0).open();
+            new MainMenuGUI(plugin, player).open();
             return true;
         }
 
@@ -97,7 +98,7 @@ public class AHCommand implements CommandExecutor, TabCompleter {
                 player.sendMessage(plugin.getLang().format("plugin-reload"));
             }
 
-            default -> new MainAuctionGUI(plugin, player, 0).open();
+            default -> new MainMenuGUI(plugin, player).open();
         }
         return true;
     }
